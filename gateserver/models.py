@@ -14,7 +14,8 @@ class Controller(db.StoredModelMixin):
                'name': 'text',
              }
 
-    def get(self, id=None, values={'id', 'ip', 'name'}):
+    def get(self, id=None, values=None):
+        if values == None: values = {'id', 'ip', 'name'}
         return super().get(id, values)
 
     def create(self, id, **kwargs):

@@ -41,8 +41,8 @@ class StoredModelMixin:
         exec_sql("CREATE TABLE IF NOT EXISTS {} ({})".format(self._table, cols),
                  ret=False)
 
-    def get(self, id=None, values={}):
-        if values == {}: values = self._attrs
+    def get(self, id=None, values=None):
+        if values == None: values = self._attrs
         cols = list(dict_intersect(self._attrs, values).keys())
         vs = ','.join(cols)
         w = 'WHERE id = %s' if id else ''
