@@ -1,0 +1,11 @@
+"""The server configuration."""
+
+http_api = {
+    'port': 5047,
+}
+
+controller_api = {
+    'port': 5042,
+}
+
+db_url = 'postgresql://user:password@host/dbname'
