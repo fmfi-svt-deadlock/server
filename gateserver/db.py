@@ -17,11 +17,7 @@ def exec_sql(query, args=(), ret=True):
 
 def dict_intersect(d, f):
     """Only keeps those keys of d which are present in f. Values stay intact."""
-    r = {}
-    for k, v in d.items():
-        if k in f:
-            r[k] = v
-    return r
+    return { k: v for k, v in d.items() if k in f }
 
 def unzip(lst):
     return zip(*lst)
