@@ -46,3 +46,6 @@ class ControllerAPI(RestMixin, Controller): pass
 def serve(config):
     cherrypy.config.update({'server.socket_port': config['port'],})
     cherrypy.engine.start()
+
+def stop():
+    cherrypy.engine.exit()
