@@ -7,17 +7,13 @@ import psycopg2
 db = psycopg2.connect(config.db_url)
 db.autocommit=True
 
-def exec_sql(query, args=(), ret=True):
+def exec_sql(query, args=(), ret=False):
     """Execute the query, returning the result as a list if `ret` is set."""
     with db.cursor() as cur:
         cur.execute(query, args)
         if ret: return cur.fetchall()
 
 ################################################################################
-
-def dict_intersect(d, f):
-    """Only keeps those keys of d which are present in f. Values stay intact."""
-    return { k: v for k, v in d.items() if k in f }
 
 def unzip(lst):
     return zip(*lst)
@@ -34,30 +30,27 @@ class StoredModelMixin:
 
     def __init__(self):
         cols = ','.join([ k+' '+v for k, v in self._attrs.items() ])
-        exec_sql("CREATE TABLE IF NOT EXISTS {} ({})".format(self._table, cols),
-                 ret=False)
+        exec_sql("CREATE TABLE IF NOT EXISTS {} ({})".format(self._table, cols))
 
-    def get(self, id=None, values=None):
-        if values == None: values = self._attrs
-        cols = list(dict_intersect(self._attrs, values).keys())
-        vs = ','.join(cols)
-        w = 'WHERE id = %s' if id else ''
-        r = exec_sql('SELECT {} FROM {} {}'.format(vs, self._table, w), (id,))
-        rr = [ dict(zip(cols, s)) for s in r ]  # {key: value} instead of tuples
+    def get(self, id=None, cols=None):
+        if cols == None: cols = self._attrs
+        assert(set(cols) <= set(self._attrs))
+        cols = list(cols)
+        q = 'SELECT {} FROM {}'.format(','.join(cols), self._table)
+        if id: q += ' WHERE id = %s'
+        r = [ dict(zip(cols, s)) for s in exec_sql(q, (id,), ret=True) ]
         if id:
-            if rr == []: return None
-            else: return rr[0]
-        else: return rr
+            if r == []: return None
+            else: return r[0]
+        else: return r
 
-    def create(self, id, **kwargs):
-        args = dict_intersect(kwargs, self._attrs)
+    def create(self, id, **args):
+        assert(set(args) <= set(self._attrs))
         args['id'] = id
         keys, values = unzip(list(args.items()))
         ks = ','.join(keys); vs = ','.join(['%s']*len(values))
-
         exec_sql('INSERT INTO {} ({}) VALUES ({})'.format(self._table, ks, vs),
-                  values, ret=False)
+                  values)
 
     def delete(self, id):
-        exec_sql('DELETE FROM {} WHERE id = %s'.format(self._table), (id,),
-                 ret=False)
+        exec_sql('DELETE FROM {} WHERE id = %s'.format(self._table), (id,))
