@@ -9,3 +9,10 @@ controller_api = {
 }
 
 db_url = 'postgresql://user:password@host/dbname'
+
+tests = {
+    'http_api': {
+        'port': 9001,
+    },
+    'db_url': 'postgresql://user:password@localhost/gate_test',
+}
