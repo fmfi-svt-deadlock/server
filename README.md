@@ -25,7 +25,6 @@ The rest doesn't exist yet.
 Next to do:
 -----------
 
-- tests
 - listen on UDP socket
 - wrap/unwrap NaCl
 - fix DB singleton (who wants a singleton?!) -- inversion of control

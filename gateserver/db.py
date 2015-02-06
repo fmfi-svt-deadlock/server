@@ -1,7 +1,6 @@
 """Holds the (global) connection to the DB."""
 # TODO maybe use a connection pool one beautiful day
 
-import config
 import psycopg2
 
 conn = None
