@@ -12,6 +12,12 @@ class Resource(MountPoint):
     """Represents a REST resource."""
     exposed = True
 
+class Log(Resource):
+    @cherrypy.tools.json_out()
+    def GET(self, entries=100):
+        return db.exec_sql('SELECT * FROM log ORDER BY time DESC LIMIT %s',
+                           (entries,), ret=True)
+
 class CRUDResource(Resource):
     """Represents a REST resource that exposes a DB table's CRUD methods."""
     def __init__(self, tbl, put_columns, get_columns, on_save=lambda x: x):
@@ -63,6 +69,7 @@ api_root.controller = CRUDResource('controller',
         put_columns={'id', 'ip', 'key', 'name'},
         on_save=lambda ctrl:
             dict(ctrl, key=nacl.randombytes(nacl.crypto_secretbox_KEYBYTES)))
+api_root.log = Log()
 
 ################################################################################
 
