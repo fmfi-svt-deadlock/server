@@ -1,50 +1,80 @@
 """Defines the REST API for CRUD and management."""
 
-from .models import Controller  # TODO ...and others, once they exist
-
+from . import db
+import nacl.raw as nacl
 import cherrypy
-import psycopg2
-import config
 
-class RestMixin():
-    """Mixin to expose the given model via REST."""
+class MountPoint:
+    """Represents a mount point, or path prefix, for attaching resources to."""
+    pass
 
+class Resource(MountPoint):
+    """Represents a REST resource."""
     exposed = True
+
+class CRUDResource(Resource):
+    """Represents a REST resource that exposes a DB table's CRUD methods."""
+    def __init__(self, tbl, put_columns, get_columns, on_save=lambda x: x):
+        assert(tbl.isidentifier())
+        self.table       = tbl
+        self.put_columns = put_columns
+        self.get_columns = get_columns
+        self.on_save     = on_save
 
     @cherrypy.tools.json_out()
     def GET(self, id=None):
-        r = self.get(id)
-        if r == None: raise cherrypy.NotFound()
-        else: return r
+        cols = list(self.get_columns)
+        q = 'SELECT {} FROM {}'.format(','.join(cols), self.table)
+        if id: q += ' WHERE id = %s'
+        rs = [ dict(zip(cols, r)) for r in db.exec_sql(q, (id,), ret=True) ]
+        if id:
+            if len(rs) < 1: raise cherrypy.HTTPError('404 Not Found')
+            return rs[0]
+        else: return rs
 
     @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
     def PUT(self, id):
+        json = self.on_save(dict(cherrypy.request.json, id=id))
+        print(json)
+        cols, values, ps = [], [], []
+        for c in self.put_columns:
+            cols.append(c)
+            values.append(json.get(c))
+            ps.append('%s')
+        q = 'INSERT INTO controller ({}) VALUES ({})'.format(','.join(cols),
+                                                             ','.join(ps))
         try:
-            return self.create(id, **cherrypy.request.json)
-        except psycopg2.IntegrityError as e:
-            raise cherrypy.HTTPError("409 Conflict", e.pgerror)
+            db.exec_sql(q, values)
+        except db.IntegrityError as e:
+            raise cherrypy.HTTPError('400 Bad Request', e.pgerror)
+        return { 'url': cherrypy.url() }
+
+    # TODO POST
 
     def DELETE(self, id):
-        self.delete(id)
-
-def expose_at(path):
-    def mount(cls):
-        cherrypy.tree.mount(cls(), path, {'/': cherrypy_model_endpoint_conf})
-    return mount
+        db.exec_sql('DELETE FROM {} WHERE id = %s'.format(self.table), (id,))
 
 ################################################################################
 
-cherrypy_model_endpoint_conf = {
-    'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+api_root = MountPoint()
+api_root.controller = CRUDResource('controller',
+        get_columns={'id', 'ip', 'name'},
+        put_columns={'id', 'ip', 'key', 'name'},
+        on_save=lambda ctrl:
+            dict(ctrl, key=nacl.randombytes(nacl.crypto_secretbox_KEYBYTES)))
+
+################################################################################
+
+cherrypy_conf = {
+    '/': {
+        'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+    }
 }
-
-@expose_at('/controller')
-class ControllerAPI(RestMixin, Controller): pass
-
-################################################################################
+cherrypy.tree.mount(api_root, '/', cherrypy_conf)
 
 def serve(config):
-    cherrypy.config.update({'server.socket_port': config['port'],})
+    cherrypy.config.update({'server.socket_port': config['port']})
     cherrypy.engine.start()
 
 def stop():
