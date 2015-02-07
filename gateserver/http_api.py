@@ -6,7 +6,6 @@ import cherrypy
 
 class MountPoint:
     """Represents a mount point, or path prefix, for attaching resources to."""
-    pass
 
 class Resource(MountPoint):
     """Represents a REST resource."""
@@ -32,7 +31,7 @@ class CRUDResource(Resource):
         cols = list(self.get_columns)
         q = 'SELECT {} FROM {}'.format(','.join(cols), self.table)
         if id: q += ' WHERE id = %s'
-        rs = [ dict(zip(cols, r)) for r in db.exec_sql(q, (id,), ret=True) ]
+        rs = db.exec_sql(q, (id,), ret=True)
         if id:
             if len(rs) < 1: raise cherrypy.HTTPError('404 Not Found')
             return rs[0]
@@ -53,7 +52,7 @@ class CRUDResource(Resource):
         try:
             db.exec_sql(q, values)
         except db.IntegrityError as e:
-            raise cherrypy.HTTPError('400 Bad Request', e.pgerror)
+            raise cherrypy.HTTPError('400 Bad Request', e.pgerror) from e
         return { 'url': cherrypy.url() }
 
     # TODO POST
