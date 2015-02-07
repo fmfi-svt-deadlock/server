@@ -5,7 +5,7 @@ from gateserver import db
 
 def db_create_tables():
     print('Creating DB tables...', end='')
-    with open('./tables.sql', 'r') as f:
+    with open('./tables.txt', 'r') as f:
         if not db.conn: db.connect(config.db_url)
         for line in f:
             line = line.split('#')[0].strip()
