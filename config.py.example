@@ -1,18 +1,5 @@
 """The server configuration."""
 
-http_api = {
-    'port': 5047,
-}
-
-controller_api = {
-    'port': 5042,
-}
-
-db_url = 'postgresql://user:password@host/dbname'
-
-tests = {
-    'http_api': {
-        'port': 9001,
-    },
-    'db_url': 'postgresql://user:password@localhost/gate_test',
-}
+http_port = 5047
+udp_port  = 5042
+db_url    = 'postgresql://user:password@localhost/gate'

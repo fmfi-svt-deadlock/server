@@ -81,7 +81,7 @@ cherrypy_conf = {
 cherrypy.tree.mount(api_root, '/', cherrypy_conf)
 
 def serve(config):
-    cherrypy.config.update({'server.socket_port': config['port']})
+    cherrypy.config.update({'server.socket_port': config.http_port})
     cherrypy.engine.start()
 
 def stop():

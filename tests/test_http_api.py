@@ -1,15 +1,15 @@
-import config
+import tests.config as config
 import bootstrap
 import gateserver.db
 import gateserver.http_api
 import requests
 
-url = 'http://localhost:{}'.format(config.tests['http_api']['port'])
+url = 'http://localhost:{}'.format(config.http_port)
 
 def setup_module(module):
-    gateserver.db.connect(config.tests['db_url'])
+    gateserver.db.connect(config.db_url)
     bootstrap.db_create_tables()
-    gateserver.http_api.serve(config.tests['http_api'])
+    gateserver.http_api.serve(config)
 
 def teardown_module(module):
     gateserver.http_api.stop()
