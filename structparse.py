@@ -10,10 +10,10 @@ class BadMessageError(Exception): pass
 def checkmsg(expression, err):
     if not expression: raise BadMessageError(err)
 
-# --- pieces of struct format strings: docs.python.org/3/library/struct.html ---
-uint8_t = 'B'
-bytes_t = lambda sz: '{}s'.format(sz)
-# --- end pieces of format strings ---------------------------------------------
+class t:
+    """pieces of struct format strings: docs.python.org/3/library/struct.html"""
+    uint8 = 'B'
+    bytes = lambda sz: '{}s'.format(sz)
 
 class MyStructBase:
     _struct = None
@@ -24,7 +24,7 @@ class MyStructBase:
 
     @classmethod
     def unpack_from(cls, buf):
-        """Constructs a struct by unpacking the buffer.
+        """Constructs a new instance by unpacking the given buffer.
 
         Returns the new instance and the rest of the buffer.
         """
@@ -54,15 +54,15 @@ S = ReplyStatus
 
 PacketHead = mystruct('PacketHead',
                      ['protocol_version', 'controllerID', 'nonce'      ],
-                     [ bytes_t(2)       ,  bytes_t(6)   ,  bytes_t(18) ])
+                     [ t.bytes(2)       ,  t.bytes(6)   ,  t.bytes(18) ])
 
 RequestHead = mystruct('RequestHead',
                       ['msg_type'],
-                      [ uint8_t  ])
+                      [ t.uint8  ])
 
 ReplyHead = mystruct('ReplyHead',
                     ['msg_type', 'status' ],
-                    [ uint8_t  ,  uint8_t ])
+                    [ t.uint8  ,  t.uint8 ])
 
 def fstring(buf):
     length, string = int(buf[0]), buf[1:]
@@ -74,7 +74,8 @@ process_request = {
         lambda data: ((S.OK if fstring(data) == 'Hello' else S.ERR), None),
 }
 
-def make_reply(packet_head, request_head, status, data):
+def make_reply_packet(packet_head, request_head, status, data):
+    """Requires `packet_head` and `request_head` to be valid."""
     nnonce = bytearray(packet_head.nonce); nnonce[-1] |= 0x1
     p = PacketHead(protocol_version=PROTOCOL_VERSION,
                    controllerID=packet_head.controllerID,
@@ -82,7 +83,7 @@ def make_reply(packet_head, request_head, status, data):
     r = ReplyHead(msg_type=request_head.msg_type, status=status.value)
     return p.pack() + r.pack() + (data or bytes(0))
 
-def handle_request(buf):
+def parse_request_packet(buf):
     p, payload = PacketHead.unpack_from(buf)
     checkmsg(p.protocol_version == PROTOCOL_VERSION, 'Invalid protocol version')
     checkmsg(p.nonce[-1] & 0x1 == 0, 'Last bit of request nonce must be 0')
@@ -91,8 +92,12 @@ def handle_request(buf):
         t = MsgType(r.msg_type)
     except ValueError:
         raise BadMessageError('Unknown request type {}'.format(r.msg_type))
-    status, data = process_request[t](data)
-    return make_reply(p, r, status, data)
+    return p, r, t, data
+
+def handle_request(buf):
+    packet_head, request_head, request_type, indata = parse_request_packet(buf)
+    status, outdata = process_request[request_type](indata)
+    return make_reply_packet(packet_head, request_head, status, outdata)
 
 if __name__ == '__main__':
     with open('./packet_example.bin', 'rb') as f:
