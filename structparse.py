@@ -3,24 +3,24 @@ from struct import Struct
 from enum import Enum
 
 PROTOCOL_VERSION = bytes([0x00,0x01])
-ENDIANITY        = '<'  # little
+STRUCT_FORMAT    = '<'  # little-endian, no alignment (i.e. packed)
 
 class BadMessageError(Exception): pass
 
 def checkmsg(expression, err):
     if not expression: raise BadMessageError(err)
 
-# pieces of struct format strings -- docs.python.org/3/library/struct.html
+# --- pieces of struct format strings: docs.python.org/3/library/struct.html ---
 uint8_t = 'B'
 bytes_t = lambda sz: '{}s'.format(sz)
+# --- end pieces of format strings ---------------------------------------------
 
-def mystruct(name, fields, types):
-    """Creates a namedtuple that can be packed to and unpacked from `bytes`.
+class MyStructBase:
+    _struct = None
 
-    It simply attaches a `Struct` with the given format string.
-    """
-    cls = namedtuple(name, fields)
-    cls._struct = Struct(ENDIANITY + ''.join(types))
+    @classmethod
+    def set_struct(cls, formatstring):
+        cls._struct = Struct(formatstring)
 
     @classmethod
     def unpack_from(cls, buf):
@@ -36,9 +36,12 @@ def mystruct(name, fields, types):
         """Returns itself packed as `bytes`."""
         return self._struct.pack(*self)
 
-    cls.unpack_from = unpack_from
-    cls.pack = pack
-    return cls
+def mystruct(name, fields, types):
+    """Creates a namedtuple that can be packed to and unpacked from `bytes`."""
+    class Cls(namedtuple(name, fields), MyStructBase): pass
+    Cls.__name__ = name
+    Cls.set_struct(STRUCT_FORMAT + ''.join(types))
+    return Cls
 
 class MsgType(Enum):
     OPEN = 1
