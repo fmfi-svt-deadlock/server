@@ -15,7 +15,7 @@ class t:
     uint8 = 'B'
     bytes = lambda sz: '{}s'.format(sz)
 
-class MyStructBase:
+class MyStructMixin:
     _struct = None
 
     @classmethod
@@ -38,7 +38,7 @@ class MyStructBase:
 
 def mystruct(name, fields, types):
     """Creates a namedtuple that can be packed to and unpacked from `bytes`."""
-    class Cls(namedtuple(name, fields), MyStructBase): pass
+    class Cls(namedtuple(name, fields), MyStructMixin): pass
     Cls.__name__ = name
     Cls.set_struct(STRUCT_FORMAT + ''.join(types))
     return Cls
@@ -64,25 +64,6 @@ ReplyHead = mystruct('ReplyHead',
                     ['msg_type', 'status' ],
                     [ t.uint8  ,  t.uint8 ])
 
-def fstring(buf):
-    length, string = int(buf[0]), buf[1:]
-    checkmsg(length <= len(string), 'fstring length > buffer size')
-    return string[:length]
-
-process_request = {
-    MsgType.OPEN:
-        lambda data: ((S.OK if fstring(data) == 'Hello' else S.ERR), None),
-}
-
-def make_reply_packet(packet_head, request_head, status, data):
-    """Requires `packet_head` and `request_head` to be valid."""
-    nnonce = bytearray(packet_head.nonce); nnonce[-1] |= 0x1
-    p = PacketHead(protocol_version=PROTOCOL_VERSION,
-                   controllerID=packet_head.controllerID,
-                   nonce=nnonce)
-    r = ReplyHead(msg_type=request_head.msg_type, status=status.value)
-    return p.pack() + r.pack() + (data or bytes(0))
-
 def parse_request_packet(buf):
     p, payload = PacketHead.unpack_from(buf)
     checkmsg(p.protocol_version == PROTOCOL_VERSION, 'Invalid protocol version')
@@ -93,6 +74,25 @@ def parse_request_packet(buf):
     except ValueError:
         raise BadMessageError('Unknown request type {}'.format(r.msg_type))
     return p, r, t, data
+
+def make_reply_packet(packet_head, request_head, status, data):
+    """Requires `packet_head` and `request_head` to be valid."""
+    nnonce = bytearray(packet_head.nonce); nnonce[-1] |= 0x1
+    p = PacketHead(protocol_version=PROTOCOL_VERSION,
+                   controllerID=packet_head.controllerID,
+                   nonce=nnonce)
+    r = ReplyHead(msg_type=request_head.msg_type, status=status.value)
+    return p.pack() + r.pack() + (data or bytes(0))
+
+def fstring(buf):
+    length, string = int(buf[0]), buf[1:]
+    checkmsg(length <= len(string), 'fstring length > buffer size')
+    return string[:length]
+
+process_request = {
+    MsgType.OPEN:
+        lambda data: ((S.OK if fstring(data) == 'Hello' else S.ERR), None),
+}
 
 def handle_request(buf):
     packet_head, request_head, request_type, indata = parse_request_packet(buf)
