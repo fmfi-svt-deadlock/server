@@ -1,6 +1,6 @@
 """The UDP server that provides the API for the controllers."""
 
-#from . import controller_api
+from . import controller_api
 import socketserver
 import logging
 
@@ -14,9 +14,10 @@ class MessageHandler(socketserver.BaseRequestHandler):
     """
 
     def handle(self):
-        data, socket = self.request
-        socket.sendto(data, self.client_address)
-        log.info(data, extra=dict(ip=self.client_address[0], status='OK'))
+        indata, socket = self.request
+        outdata = controller_api.handle_request(indata)
+        socket.sendto(outdata, self.client_address)
+        log.info(outdata, extra=dict(ip=self.client_address[0]))
 
 def serve(config):
     bind_addr = '0.0.0.0', config.udp_port
