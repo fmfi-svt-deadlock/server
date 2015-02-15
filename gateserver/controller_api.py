@@ -83,6 +83,7 @@ process_request = {
     MsgType.OPEN:
         lambda data: ((S.OK if fstring(data) == b'Hello' else S.ERR), None),
 }
+assert set(MsgType) == set(process_request), 'Not all message types are handled'
 
 def handle_request(buf):
     packet_head, request_head, request_type, indata = parse_packet(buf)
