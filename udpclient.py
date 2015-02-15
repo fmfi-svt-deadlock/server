@@ -12,12 +12,15 @@ def msg(buf):
     return sock.recv(1024)
 
 def request(mac, msgtype, data):
+    key   = get_key_for_mac(mac)
     nonce = os.urandom(18)
-    buf = make_packet(PacketHead(PROTOCOL_VERSION, mac, nonce),
-                      RequestHead(msgtype.value),
-                      data)
-    r = msg(buf)
-    return parse_packet(r, ReplyHead)
+    res = msg(make_packet(PacketHead(PROTOCOL_VERSION, mac, nonce),
+                          RequestHead(msgtype.value),
+                          key,
+                          data))
+    p, payload = parse_packet_head(res)
+    r, t, data = parse_r(ReplyHead, p, key, payload)
+    return p, r, t, data
 
 def prettyprint_reply(p, r, t, data):
     try:

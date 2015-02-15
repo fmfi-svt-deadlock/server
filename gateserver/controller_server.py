@@ -2,9 +2,6 @@
 
 from . import controller_api
 import socketserver
-import logging
-
-log = logging.getLogger('server')
 
 class MessageHandler(socketserver.BaseRequestHandler):
     """Handles a message from the controller.
@@ -17,9 +14,8 @@ class MessageHandler(socketserver.BaseRequestHandler):
         indata, socket = self.request
         outdata = controller_api.handle_request(indata)
         socket.sendto(outdata, self.client_address)
-        log.info(outdata, extra=dict(ip=self.client_address[0]))
 
 def serve(config):
-    bind_addr = '0.0.0.0', config.udp_port
+    bind_addr = config.udp_host, config.udp_port
     server = socketserver.ThreadingUDPServer(bind_addr, MessageHandler)
     server.serve_forever()
