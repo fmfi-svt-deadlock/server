@@ -1,5 +1,9 @@
 """Tests configuration."""
 
+http_host = 'localhost'
 http_port = 9047
+
+udp_host  = 'localhost'
 udp_port  = 9042
+
 db_url    = 'postgresql://user:password@localhost/gate_test'
