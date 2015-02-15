@@ -6,7 +6,7 @@ def get_key_for_mac(mac):
     """Loads the key for this controller from the DB."""
     rs = db.exec_sql('SELECT key FROM controller WHERE id = %s',
                      (utils.bytes2mac(mac),), ret=True)
-    checkmsg(len(rs) == 1, 'unknown controllerID ')
+    checkmsg(len(rs) == 1, 'unknown controllerID')
     return rs[0]['key'].tobytes()
 
 def fstring(buf):
@@ -21,9 +21,9 @@ process_request = {
 }
 assert set(MsgType) == set(process_request), 'Not all message types are handled'
 
-def log_message(controllerID, req_type, indata, status):
+def log_message(controllerID, mtype, indata, status):
     """TODO"""
-    print(utils.bytes2mac(controllerID), req_type.name, indata, '->', status.name)
+    print(utils.bytes2mac(controllerID), mtype.name, indata, '->', status.name)
 
 def log_bad_packet(buf, e):
     """TODO"""
@@ -31,11 +31,11 @@ def log_bad_packet(buf, e):
 
 def handle_request(buf):
     try:
-        packet_head, payload = parse_packet_head(buf)
-        key = get_key_for_mac(packet_head.controllerID)
-        req_head, req_type, indata = parse_r(RequestHead, packet_head, key, payload)
-        status, outdata = process_request[req_type](indata)
-        log_message(packet_head.controllerID, req_type, indata, status)
-        return make_reply_for(packet_head, req_head, key, status, outdata)
+        pkt_head, payload = parse_packet_head(buf)
+        key = get_key_for_mac(pkt_head.controllerID)
+        req_head, mtype, indata = parse_r(RequestHead, pkt_head, key, payload)
+        status, outdata = process_request[mtype](indata)
+        log_message(pkt_head.controllerID, mtype, indata, status)
+        return make_reply_for(pkt_head, req_head, key, status, outdata)
     except BadMessageError as e:
         log_bad_packet(buf, e)
