@@ -3,6 +3,7 @@ from . import db
 from . import utils
 
 def get_key_for_mac(mac):
+    """Loads the key for this controller from the DB."""
     rs = db.exec_sql('SELECT key FROM controller WHERE id = %s',
                      (utils.bytes2mac(mac),), ret=True)
     checkmsg(len(rs) == 1, 'unknown controllerID ')

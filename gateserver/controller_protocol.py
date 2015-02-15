@@ -1,3 +1,8 @@
+"""Implements the Controller <-> Server protocol.
+
+See https://github.com/fmfi-svt-gate/server/wiki/Controller-%E2%86%94-Server-Protocol .
+"""
+
 from .utils.structparse import *
 import nacl.raw as nacl
 
@@ -5,8 +10,8 @@ PROTOCOL_VERSION = bytes([0x00,0x01])
 
 class BadMessageError(Exception): pass
 
-def checkmsg(expression, err):
-    if not expression: raise BadMessageError(err)
+def checkmsg(expression, errmsg):
+    if not expression: raise BadMessageError(errmsg)
 
 class MsgType(Enum):
     OPEN = 1
@@ -38,11 +43,17 @@ def crypto_wrap(packet_head, key, payload):
         packet_head.controllerID + packet_head.nonce, key)
 
 def parse_packet_head(buf):
+    """Parses the packet header, returning that and the rest of the data."""
     p, payload = PacketHead.unpack_from(buf)
     checkmsg(p.protocol_version == PROTOCOL_VERSION, 'Invalid protocol version')
     return p, payload
 
 def parse_r(struct, packet_head, key, payload):
+    """Decrypts the payload and parses the request/reply header.
+
+    Returns the parsed header (as struct), message type (as MsgType) and the
+    rest of the data.
+    """
     assert struct in [RequestHead, ReplyHead]
     try: payload = crypto_unwrap(packet_head, key, payload)
     except ValueError as e: raise BadMessageError('Decryption failed') from e
@@ -52,13 +63,18 @@ def parse_r(struct, packet_head, key, payload):
     return r, t, data
 
 def make_packet(packet_head, r_head, key, data=None):
-    """Requires `packet_head` and `r_head` to be valid."""
-    payload = r_head.pack() + (data or bytes(0))
+    """Packs and encrypts the packet headers, request/reply headers and data.
 
+    Requires `packet_head` and `r_head` to be valid."""
+    payload = r_head.pack() + (data or bytes(0))
     return packet_head.pack() + crypto_wrap(packet_head, key, payload)
 
 def make_reply_for(packet_head, request_head, key, status, data=None):
-    """Requires `packet_head` and `request_head` to be valid."""
+    """Creates a reply for the given packet and request headers.
+
+    Packs status and data into a reply, encrypting according to `packet_head`
+    and `key`. Requires `packet_head` and `request_head` to be valid.
+    """
     nnonce = bytearray(packet_head.nonce); nnonce[-1] ^= 0x1
     p = PacketHead(protocol_version=PROTOCOL_VERSION,
                    controllerID=packet_head.controllerID,
