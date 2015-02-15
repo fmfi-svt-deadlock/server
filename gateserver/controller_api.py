@@ -1,8 +1,14 @@
 from .utils.structparse import *
+from . import utils
 from . import db
 import nacl.raw as nacl
 
 PROTOCOL_VERSION = bytes([0x00,0x01])
+
+class BadMessageError(Exception): pass
+
+def checkmsg(expression, err):
+    if not expression: raise BadMessageError(err)
 
 class MsgType(Enum):
     OPEN = 1
@@ -25,29 +31,48 @@ ReplyHead = mystruct('ReplyHead',
                     ['msg_type', 'status' ],
                     [ t.uint8 , t.uint8 ])
 
-def parse_request_packet(buf):
+def get_key_for_mac(mac):
+    rs = db.exec_sql('SELECT key FROM controller WHERE id = %s',
+                     (utils.bytes2mac(mac),), ret=True)
+    checkmsg(len(rs) == 1, 'unknown controllerID '+utils.bytes2mac(mac))
+    return rs[0]['key'].tobytes()
+
+def crypto_unwrap(packet_head, payload):
+    key = get_key_for_mac(packet_head.controllerID)
+    return nacl.crypto_secretbox_open(payload,
+        packet_head.controllerID + packet_head.nonce, key)
+
+def crypto_wrap(packet_head, payload):
+    key = get_key_for_mac(packet_head.controllerID)
+    return nacl.crypto_secretbox(payload,
+        packet_head.controllerID + packet_head.nonce, key)
+
+def parse_packet(buf, struct=None):
+    struct = struct or RequestHead
+    assert struct in [RequestHead, ReplyHead]
     p, payload = PacketHead.unpack_from(buf)
-    #cntrl = db.exec_sql('SELECT key FROM controller WHERE id = %s', to_mac(p.controllerID))
-    #if len(cntrl) != 1: raise BadMessageError('unknown controllerID ' + p.controllerID)
-    #key = cntrl[0].key
-    #payload = nacl.crypto_secretbox_open(payload, p.nonce, key)
     checkmsg(p.protocol_version == PROTOCOL_VERSION, 'Invalid protocol version')
-    checkmsg(p.nonce[-1] & 0x1 == 0, 'Last bit of request nonce must be 0')
-    r, data = RequestHead.unpack_from(payload)
+    payload = crypto_unwrap(p, payload)
+    r, data = struct.unpack_from(payload)
     try:
         t = MsgType(r.msg_type)
     except ValueError:
         raise BadMessageError('Unknown request type {}'.format(r.msg_type))
     return p, r, t, data
 
-def make_reply_packet(packet_head, request_head, status, data):
+def make_packet(packet_head, r_head, data=None):
+    """Requires `packet_head` and `r_head` to be valid."""
+    payload = r_head.pack() + (data or bytes(0))
+    return packet_head.pack() + crypto_wrap(packet_head, payload)
+
+def make_reply_for(packet_head, request_head, status, data=None):
     """Requires `packet_head` and `request_head` to be valid."""
-    nnonce = bytearray(packet_head.nonce); nnonce[-1] |= 0x1
+    nnonce = bytearray(packet_head.nonce); nnonce[-1] ^= 0x1
     p = PacketHead(protocol_version=PROTOCOL_VERSION,
                    controllerID=packet_head.controllerID,
                    nonce=nnonce)
     r = ReplyHead(msg_type=request_head.msg_type, status=status.value)
-    return p.pack() + r.pack() + (data or bytes(0))
+    return make_packet(p, r, data)
 
 def fstring(buf):
     length, string = int(buf[0]), buf[1:]
@@ -60,6 +85,6 @@ process_request = {
 }
 
 def handle_request(buf):
-    packet_head, request_head, request_type, indata = parse_request_packet(buf)
+    packet_head, request_head, request_type, indata = parse_packet(buf)
     status, outdata = process_request[request_type](indata)
-    return make_reply_packet(packet_head, request_head, status, outdata)
+    return make_reply_for(packet_head, request_head, status, outdata)

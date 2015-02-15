@@ -31,8 +31,8 @@ Running tests
 Next to do:
 -----------
 
-- the controller end
-- wrap/unwrap NaCl
+- split DB table to controller and door
+- on request arrival check if client IP matches the one in DB for this ID
 - HTTP: rewrite to use Werkzeug instead of CherryPy
 - fix DB singleton (who wants a singleton?!)
 - CI

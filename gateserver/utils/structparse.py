@@ -4,11 +4,6 @@ from enum import Enum
 
 STRUCT_FORMAT = '<' # little-endian, no alignment (i.e. packed)
 
-class BadMessageError(Exception): pass
-
-def checkmsg(expression, err):
-    if not expression: raise BadMessageError(err)
-
 class t:
     """pieces of struct format strings: docs.python.org/3/library/struct.html"""
     uint8 = 'B'
