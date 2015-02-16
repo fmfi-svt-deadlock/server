@@ -17,22 +17,22 @@ class MsgType(Enum):
     OPEN = 1
 
 class ReplyStatus(Enum):
-    OK = 0x01
-    ERR = 0x10
+    OK        = 0x01
+    ERR       = 0x10
     TRY_AGAIN = 0x11
 S = ReplyStatus
 
 PacketHead = mystruct('PacketHead',
-                     ['protocol_version', 'controllerID', 'nonce' ],
-                     [ t.bytes(2) , t.bytes(6) , t.bytes(18) ])
+                     ['protocol_version', 'controllerID', 'nonce'      ],
+                     [ t.bytes(2)       ,  t.bytes(6)   ,  t.bytes(18) ])
 
 RequestHead = mystruct('RequestHead',
                       ['msg_type'],
-                      [ t.uint8 ])
+                      [ t.uint8  ])
 
 ReplyHead = mystruct('ReplyHead',
                     ['msg_type', 'status' ],
-                    [ t.uint8 , t.uint8 ])
+                    [ t.uint8  ,  t.uint8 ])
 
 def crypto_unwrap(packet_head, key, payload):
     return nacl.crypto_secretbox_open(payload,
