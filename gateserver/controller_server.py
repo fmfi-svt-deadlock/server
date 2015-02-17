@@ -7,9 +7,9 @@ class MessageHandler(socketserver.BaseRequestHandler):
     """Handles a message from the controller."""
 
     def handle(self):
-        indata, socket = self.request
-        outdata = controller_api.handle_request(indata)
-        socket.sendto(outdata, self.client_address)
+        in_packet, socket = self.request
+        out_packet = controller_api.handle_request(in_packet)
+        socket.sendto(out_packet, self.client_address)
 
 def serve(config):
     bind_addr = config.udp_host, config.udp_port

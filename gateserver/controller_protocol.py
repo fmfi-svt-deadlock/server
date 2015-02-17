@@ -55,18 +55,22 @@ def parse_r(struct, packet_head, key, payload):
     rest of the data.
     """
     assert struct in [RequestHead, ReplyHead]
-    try: payload = crypto_unwrap(packet_head, key, payload)
-    except ValueError as e: raise BadMessageError('Decryption failed') from e
+    try:
+        payload = crypto_unwrap(packet_head, key, payload)
+    except ValueError as e:
+        raise BadMessageError('Decryption failed') from e
     r, data = struct.unpack_from(payload)
-    try: t = MsgType(r.msg_type)
-    except ValueError as e: raise BadMessageError('Unknown message type') from e
+    try:
+        t = MsgType(r.msg_type)
+    except ValueError as e:
+        raise BadMessageError('Unknown message type') from e
     return r, t, data
 
 def make_packet(packet_head, r_head, key, data=None):
     """Packs and encrypts the packet headers, request/reply headers and data.
 
     Requires `packet_head` and `r_head` to be valid."""
-    payload = r_head.pack() + (data or bytes(0))
+    payload = r_head.pack() + (data or b'')
     return packet_head.pack() + crypto_wrap(packet_head, key, payload)
 
 def make_reply_for(packet_head, request_head, key, status, data=None):
@@ -75,9 +79,9 @@ def make_reply_for(packet_head, request_head, key, status, data=None):
     Packs status and data into a reply, encrypting according to `packet_head`
     and `key`. Requires `packet_head` and `request_head` to be valid.
     """
-    nnonce = bytearray(packet_head.nonce); nnonce[-1] ^= 0x1
-    p = PacketHead(protocol_version=PROTOCOL_VERSION,
-                   controllerID=packet_head.controllerID,
-                   nonce=nnonce)
-    r = ReplyHead(msg_type=request_head.msg_type, status=status.value)
-    return make_packet(p, r, key, data)
+    reply_nonce = bytearray(packet_head.nonce); reply_nonce[-1] ^= 0x1
+    reply_packet_head = PacketHead(protocol_version=PROTOCOL_VERSION,
+                                   controllerID=packet_head.controllerID,
+                                   nonce=reply_nonce)
+    reply_head = ReplyHead(msg_type=request_head.msg_type, status=status.value)
+    return make_packet(reply_packet_head, reply_head, key, data)
