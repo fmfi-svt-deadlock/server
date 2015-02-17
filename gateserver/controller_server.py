@@ -9,7 +9,7 @@ class MessageHandler(socketserver.BaseRequestHandler):
     def handle(self):
         indata, socket = self.request
         outdata = controller_api.handle_request(indata)
-        socket.sendto(outdata, self.client_address)
+        if outdata: socket.sendto(outdata, self.client_address)
 
 def serve(config):
     bind_addr = config.udp_host, config.udp_port

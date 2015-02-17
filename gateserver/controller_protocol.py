@@ -8,10 +8,14 @@ import nacl.raw as nacl
 
 PROTOCOL_VERSION = bytes([0x00,0x01])
 
-class BadMessageError(Exception): pass
+class BadMessageError(Exception):
+    def __init__(self, message, data=None):
+        self.message = message
+        self.data    = data
+        super().__init__(message)
 
-def checkmsg(expression, errmsg):
-    if not expression: raise BadMessageError(errmsg)
+def checkmsg(expression, errmsg, data=None):
+    if not expression: raise BadMessageError(errmsg, data)
 
 class MsgType(Enum):
     OPEN = 1
@@ -45,7 +49,8 @@ def crypto_wrap(packet_head, key, payload):
 def parse_packet_head(buf):
     """Parses the packet header, returning that and the rest of the data."""
     p, payload = PacketHead.unpack_from(buf)
-    checkmsg(p.protocol_version == PROTOCOL_VERSION, 'Invalid protocol version')
+    checkmsg(p.protocol_version == PROTOCOL_VERSION,
+             'Invalid protocol version', p.protocol_version)
     return p, payload
 
 def parse_r(struct, packet_head, key, payload):
