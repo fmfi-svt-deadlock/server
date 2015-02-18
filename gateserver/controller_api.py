@@ -34,7 +34,7 @@ def handle_request(buf):
     try:
         packet_head, payload = p.parse_packet_head(buf)
         key = get_key_for_mac(packet_head.controllerID)
-        request_head, mtype, indata = p.parse_r(
+        request_head, mtype, indata = p.parse_payload(
                 p.RequestHead, packet_head, key, payload)
         status, outdata = process_request[mtype](indata)
         log_message(packet_head.controllerID, mtype, indata, status)

@@ -48,7 +48,7 @@ def parse_packet_head(buf):
     checkmsg(p.protocol_version == PROTOCOL_VERSION, 'Invalid protocol version')
     return p, payload
 
-def parse_r(struct, packet_head, key, payload):
+def parse_payload(struct, packet_head, key, payload):
     """Decrypts the payload and parses the request/reply header.
 
     Returns the parsed header (as struct), message type (as MsgType) and the
