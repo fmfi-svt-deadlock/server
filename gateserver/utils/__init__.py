@@ -6,3 +6,5 @@ def bytes2mac(mac):
 def mac2bytes(s):
     return bytes.fromhex(s.replace(':', ''))
 
+def unzip(lst):
+    return zip(*lst)  # yay :D

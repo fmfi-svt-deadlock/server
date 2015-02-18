@@ -1,8 +1,9 @@
 from collections import namedtuple
 from struct import Struct
 from enum import Enum
+from . import unzip
 
-STRUCT_FORMAT = '<' # little-endian, no alignment (i.e. packed)
+ENDIANITY = '<'  # little-endian, no alignment (i.e. packed)
 
 class t:
     """pieces of struct format strings: docs.python.org/3/library/struct.html"""
@@ -11,10 +12,6 @@ class t:
 
 class MyStructMixin:
     _struct = None
-
-    @classmethod
-    def set_struct(cls, formatstring):
-        cls._struct = Struct(formatstring)
 
     @classmethod
     def unpack_from(cls, buf):
@@ -30,9 +27,10 @@ class MyStructMixin:
         """Returns itself packed as `bytes`."""
         return self._struct.pack(*self)
 
-def mystruct(name, fields, types):
+def mystruct(name, *fields):
     """Creates a namedtuple that can be packed to and unpacked from `bytes`."""
-    class Cls(namedtuple(name, fields), MyStructMixin): pass
+    fieldtypes, fieldnames = unzip(fields)
+    class Cls(namedtuple(name, fieldnames), MyStructMixin): pass
     Cls.__name__ = name
-    Cls.set_struct(STRUCT_FORMAT + ''.join(types))
+    Cls._struct = Struct(ENDIANITY + ''.join(fieldtypes))
     return Cls

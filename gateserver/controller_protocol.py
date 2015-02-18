@@ -23,16 +23,16 @@ class ReplyStatus(Enum):
 S = ReplyStatus
 
 PacketHead = mystruct('PacketHead',
-                     ['protocol_version', 'controllerID', 'nonce'      ],
-                     [ t.bytes(2)       ,  t.bytes(6)   ,  t.bytes(18) ])
+                      (t.bytes(2) , 'protocol_version'),
+                      (t.bytes(6) , 'controllerID'    ),
+                      (t.bytes(18), 'nonce'           ))
 
 RequestHead = mystruct('RequestHead',
-                      ['msg_type'],
-                      [ t.uint8  ])
+                       (t.uint8, 'msg_type'))
 
 ReplyHead = mystruct('ReplyHead',
-                    ['msg_type', 'status' ],
-                    [ t.uint8  ,  t.uint8 ])
+                     (t.uint8, 'msg_type'),
+                     (t.uint8, 'status'  ))
 
 def crypto_unwrap(packet_head, key, payload):
     return nacl.crypto_secretbox_open(payload,
