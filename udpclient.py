@@ -1,6 +1,7 @@
 import config
 from gateserver import db
 from gateserver.controller_api import *
+from gateserver.controller_protocol import *
 from gateserver.utils import mac2bytes
 import socket
 import os
@@ -19,18 +20,18 @@ def request(mac, msgtype, data):
                           key,
                           data))
     p, payload = parse_packet_head(res)
-    r, t, data = parse_r(ReplyHead, p, key, payload)
+    r, t, data = parse_payload(ResponseHead, p, key, payload)
     return p, r, t, data
 
-def prettyprint_reply(p, r, t, data):
+def prettyprint_response(p, r, t, data):
     try:
-        s = ReplyStatus(r.status)
+        s = ResponseStatus(r.status)
     except ValueError:
         raise BadMessageError('Unknown status {}'.format(r.status))
     return '{} {}: {}'.format(t.name, s.name, data or '(no data)')
 
 if __name__ == '__main__':
-    _, mac, msgtype = sys.argv
+    mac, msgtype = sys.argv[1:]
     try:
         t = MsgType[msgtype.upper()]
     except KeyError:
@@ -39,5 +40,5 @@ if __name__ == '__main__':
     indata = sys.stdin.buffer.read()
 
     db.connect(config.db_url)
-    reply = request(mac2bytes(mac), t, indata)
-    print(prettyprint_reply(*reply))
+    response = request(mac2bytes(mac), t, indata)
+    print(prettyprint_response(*response))

@@ -16,11 +16,10 @@ def checkmsg(expression, errmsg):
 class MsgType(Enum):
     OPEN = 1
 
-class ReplyStatus(Enum):
+class ResponseStatus(Enum):
     OK        = 0x01
     ERR       = 0x10
     TRY_AGAIN = 0x11
-S = ReplyStatus
 
 PacketHead = mystruct('PacketHead',
                       (t.bytes(2) , 'protocol_version'),
@@ -30,7 +29,7 @@ PacketHead = mystruct('PacketHead',
 RequestHead = mystruct('RequestHead',
                        (t.uint8, 'msg_type'))
 
-ReplyHead = mystruct('ReplyHead',
+ResponseHead = mystruct('ResponseHead',
                      (t.uint8, 'msg_type'),
                      (t.uint8, 'status'  ))
 
@@ -49,12 +48,12 @@ def parse_packet_head(buf):
     return p, payload
 
 def parse_payload(struct, packet_head, key, payload):
-    """Decrypts the payload and parses the request/reply header.
+    """Decrypts the payload and parses the request/response header.
 
     Returns the parsed header (as struct), message type (as MsgType) and the
     rest of the data.
     """
-    assert struct in [RequestHead, ReplyHead]
+    assert struct in [RequestHead, ResponseHead]
     try:
         payload = crypto_unwrap(packet_head, key, payload)
     except ValueError as e:
@@ -66,22 +65,28 @@ def parse_payload(struct, packet_head, key, payload):
         raise BadMessageError('Unknown message type') from e
     return r, t, data
 
+def parse_request(packet_head, key, payload):
+    return parse_payload(RequestHead, packet_head, key, payload)
+
+def parse_response(packet_head, key, payload):
+    return parse_payload(ResponseHead, packet_head, key, payload)
+
 def make_packet(packet_head, r_head, key, data=None):
-    """Packs and encrypts the packet headers, request/reply headers and data.
+    """Packs and encrypts the packet headers, request/response headers and data.
 
     Requires `packet_head` and `r_head` to be valid."""
     payload = r_head.pack() + (data or b'')
     return packet_head.pack() + crypto_wrap(packet_head, key, payload)
 
-def make_reply_for(packet_head, request_head, key, status, data=None):
-    """Creates a reply for the given packet and request headers.
+def make_response_for(packet_head, request_head, key, status, data=None):
+    """Creates a response for the given packet and request headers.
 
-    Packs status and data into a reply, encrypting according to `packet_head`
+    Packs status and data into a response, encrypting according to `packet_head`
     and `key`. Requires `packet_head` and `request_head` to be valid.
     """
-    reply_nonce = bytearray(packet_head.nonce); reply_nonce[-1] ^= 0x1
-    reply_packet_head = PacketHead(protocol_version=PROTOCOL_VERSION,
+    response_nonce = bytearray(packet_head.nonce); response_nonce[-1] ^= 0x1
+    response_packet_head = PacketHead(protocol_version=PROTOCOL_VERSION,
                                    controllerID=packet_head.controllerID,
-                                   nonce=reply_nonce)
-    reply_head = ReplyHead(msg_type=request_head.msg_type, status=status.value)
-    return make_packet(reply_packet_head, reply_head, key, data)
+                                   nonce=response_nonce)
+    response_head = ResponseHead(msg_type=request_head.msg_type, status=status.value)
+    return make_packet(response_packet_head, response_head, key, data)
