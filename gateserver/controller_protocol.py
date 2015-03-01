@@ -3,7 +3,8 @@
 See https://github.com/fmfi-svt-gate/server/wiki/Controller-%E2%86%94-Server-Protocol .
 """
 
-from .utils.structparse import *
+from .utils.structparse import mystruct, t
+from enum import Enum
 import nacl.raw as nacl
 
 PROTOCOL_VERSION = bytes([0x00,0x01])
