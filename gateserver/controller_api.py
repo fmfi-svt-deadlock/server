@@ -1,5 +1,5 @@
-from .controller_protocol import (checkmsg, MsgType, ResponseStatus,
-    make_response_for, parse_packet_head, parse_request, BadMessageError)
+from .controller_protocol import (checkmsg, MsgType, ResponseStatus, Response,
+    response_packet_for, parse_packet, request_from_packet, BadMessageError)
 from . import db
 from . import utils
 
@@ -16,13 +16,6 @@ def isic_id_repr(buf):
     checkmsg(length <= len(string), 'isic_id_repr length > buffer size')
     return string[:length]
 
-process_request = {
-    MsgType.OPEN:
-        lambda data: ((ResponseStatus.OK if isic_id_repr(data) == b'Hello'
-                       else ResponseStatus.ERR), None),
-}
-assert set(MsgType) == set(process_request), 'Not all message types handled'
-
 def log_message(controllerID, mtype, indata, status):
     """TODO"""
     print(utils.bytes2mac(controllerID), mtype.name, indata, '->', status.name)
@@ -31,13 +24,25 @@ def log_bad_packet(buf, e):
     """TODO"""
     raise e
 
+process_request = {
+    MsgType.OPEN:
+        lambda ctrl, data: ((ResponseStatus.OK if isic_id_repr(data) == b'Hello'
+                             else ResponseStatus.ERR), b''),
+}
+assert set(MsgType) == set(process_request), 'Not all message types handled'
+
 def handle_request(buf):
     try:
-        packet_head, payload = parse_packet_head(buf)
-        key = get_key_for_mac(packet_head.controllerID)
-        request_head, mtype, indata = parse_request(packet_head, key, payload)
-        status, outdata = process_request[mtype](indata)
-        log_message(packet_head.controllerID, mtype, indata, status)
-        return make_response_for(packet_head, request_head, key, status, outdata)
+        packet = parse_packet(buf)
+        key = get_key_for_mac(packet.controller_id)
+        request = request_from_packet(packet, key)
+        response_status, response_data = process_request[request.msg_type_e](
+            packet.controller_id, request.tail)
+        response = Response(request.msg_type_e.value, response_status.value)
+        response.tail = response_data
+        response_packet = response_packet_for(packet, response, key)
+        log_message(packet.controller_id, request.msg_type_e, request.tail,
+                    response_status)
+        return response_packet.pack()
     except BadMessageError as e:
         log_bad_packet(buf, e)

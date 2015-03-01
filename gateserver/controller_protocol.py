@@ -21,72 +21,82 @@ class ResponseStatus(Enum):
     ERR       = 0x10
     TRY_AGAIN = 0x11
 
-PacketHead = mystruct('PacketHead',
-                      (t.bytes(2) , 'protocol_version'),
-                      (t.bytes(6) , 'controllerID'    ),
-                      (t.bytes(18), 'nonce'           ))
+Packet = mystruct('Packet',
+                  (t.bytes(2) , 'protocol_version'),
+                  (t.bytes(6) , 'controller_id'   ),
+                  (t.bytes(18), 'nonce'           ))
 
-RequestHead = mystruct('RequestHead',
-                       (t.uint8, 'msg_type'))
+Request = mystruct('Request',
+                   (t.uint8, 'msg_type'))
 
-ResponseHead = mystruct('ResponseHead',
-                     (t.uint8, 'msg_type'),
-                     (t.uint8, 'status'  ))
+Response = mystruct('Response',
+                    (t.uint8, 'msg_type'),
+                    (t.uint8, 'status'  ))
 
-def crypto_unwrap(packet_head, key, payload):
+def crypto_unwrap(packet, key, payload):
     return nacl.crypto_secretbox_open(payload,
-        packet_head.controllerID + packet_head.nonce, key)
+        packet.controller_id + packet.nonce, key)
 
-def crypto_wrap(packet_head, key, payload):
+def crypto_wrap(packet, key, payload):
     return nacl.crypto_secretbox(payload,
-        packet_head.controllerID + packet_head.nonce, key)
+        packet.controller_id + packet.nonce, key)
 
-def parse_packet_head(buf):
-    """Parses the packet header, returning that and the rest of the data."""
-    p, payload = PacketHead.unpack_from(buf)
-    checkmsg(p.protocol_version == PROTOCOL_VERSION, 'Invalid protocol version')
-    return p, payload
+def parse_packet(buf):
+    """Parses the packet into a `Packet` struct with the body in `tail`."""
+    packet = Packet.unpack_with_tail(buf)
+    checkmsg(packet.protocol_version == PROTOCOL_VERSION,
+        'Invalid protocol version')
+    return packet
 
-def parse_payload(struct, packet_head, key, payload):
-    """Decrypts the payload and parses the request/response header.
+def payload_from_packet(payload_struct, packet, key):
+    """Decrypts the packet payload and parses the request/response header.
 
-    Returns the parsed header (as struct), message type (as MsgType) and the
-    rest of the data.
+    Returns the parsed payload (as struct), with the `msg_type_e` property set
+    to the parsed `MsgType`.
     """
-    assert struct in [RequestHead, ResponseHead]
+    assert payload_struct in [Request, Response]
     try:
-        payload = crypto_unwrap(packet_head, key, payload)
+        payload = crypto_unwrap(packet, key, packet.tail)
     except ValueError as e:
         raise BadMessageError('Decryption failed') from e
-    r, data = struct.unpack_from(payload)
+    parsed = payload_struct.unpack_with_tail(payload)
     try:
-        t = MsgType(r.msg_type)
+        parsed.msg_type_e = MsgType(parsed.msg_type)
     except ValueError as e:
         raise BadMessageError('Unknown message type') from e
-    return r, t, data
+    return parsed
 
-def parse_request(packet_head, key, payload):
-    return parse_payload(RequestHead, packet_head, key, payload)
+def request_from_packet(packet, key):
+    """Decrypts the request packet payload and parses the request.
 
-def parse_response(packet_head, key, payload):
-    return parse_payload(ResponseHead, packet_head, key, payload)
-
-def make_packet(packet_head, r_head, key, data=None):
-    """Packs and encrypts the packet headers, request/response headers and data.
-
-    Requires `packet_head` and `r_head` to be valid."""
-    payload = r_head.pack() + (data or b'')
-    return packet_head.pack() + crypto_wrap(packet_head, key, payload)
-
-def make_response_for(packet_head, request_head, key, status, data=None):
-    """Creates a response for the given packet and request headers.
-
-    Packs status and data into a response, encrypting according to `packet_head`
-    and `key`. Requires `packet_head` and `request_head` to be valid.
+    Returns the parsed Request, with the `msg_type_e` property set
+    to the parsed `MsgType`.
     """
-    response_nonce = bytearray(packet_head.nonce); response_nonce[-1] ^= 0x1
-    response_packet_head = PacketHead(protocol_version=PROTOCOL_VERSION,
-                                   controllerID=packet_head.controllerID,
-                                   nonce=response_nonce)
-    response_head = ResponseHead(msg_type=request_head.msg_type, status=status.value)
-    return make_packet(response_packet_head, response_head, key, data)
+    return payload_from_packet(Request, packet, key)
+
+def response_from_packet(packet, key):
+    """Decrypts the response packet payload and parses the response.
+
+    Returns the parsed Response, with the `msg_type_e` and `status_e` properties
+    set to the parsed `MsgType` and `ResponseStatus`, respectively.
+    """
+    response = payload_from_packet(Response, packet, key)
+    try:
+        response.status_e = ResponseStatus(response.status)
+    except ValueError:
+        raise BadMessageError('Unknown status {}'.format(response.status))
+    return response
+
+def response_packet_for(request_packet, response, key):
+    """Creates a response Packet for the given request Packet and Response.
+
+    Packs Response, encrypting according to `request_packet` and `key`. Requires
+    `request_packet` and `response` to be valid.
+    """
+    response_nonce = bytearray(request_packet.nonce); response_nonce[-1] ^= 0x1
+    response_packet = Packet(PROTOCOL_VERSION,
+                             request_packet.controller_id,
+                             response_nonce)
+    response_payload = crypto_wrap(response_packet, key, response.pack())
+    response_packet.tail = response_payload
+    return response_packet

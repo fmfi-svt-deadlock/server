@@ -12,23 +12,18 @@ def msg(buf):
     sock.sendto(buf, (config.udp_host, config.udp_port))
     return sock.recv(1024)
 
-def request(mac, msgtype, data):
+def send_request(mac, msgtype, data):
     key   = get_key_for_mac(mac)
     nonce = os.urandom(18)
-    res = msg(make_packet(PacketHead(PROTOCOL_VERSION, mac, nonce),
-                          RequestHead(msgtype.value),
-                          key,
-                          data))
-    p, payload = parse_packet_head(res)
-    r, t, data = parse_payload(ResponseHead, p, key, payload)
-    return p, r, t, data
+    request = Request(msgtype.value); request.tail = data;
+    request_packet = Packet(PROTOCOL_VERSION, mac, nonce);
+    request_packet.tail = crypto_wrap(request_packet, key, request.pack());
+    response_packet = parse_packet(msg(request_packet.pack()))
+    return response_from_packet(response_packet, key)
 
-def prettyprint_response(p, r, t, data):
-    try:
-        s = ResponseStatus(r.status)
-    except ValueError:
-        raise BadMessageError('Unknown status {}'.format(r.status))
-    return '{} {}: {}'.format(t.name, s.name, data or '(no data)')
+def prettyprint_response(response):
+    return '{} {}: {}'.format(response.msg_type_e.name, response.status_e.name,
+                              response.tail or '(no data)')
 
 if __name__ == '__main__':
     mac, msgtype = sys.argv[1:]
@@ -40,5 +35,5 @@ if __name__ == '__main__':
     indata = sys.stdin.buffer.read()
 
     db.connect(config.db_url)
-    response = request(mac2bytes(mac), t, indata)
-    print(prettyprint_response(*response))
+    response = send_request(mac2bytes(mac), t, indata)
+    print(prettyprint_response(response))
