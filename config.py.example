@@ -1,9 +1,9 @@
 """The server configuration."""
 
-http_host = '0.0.0.0'  # Use the actual IP address, binding to 0.0.0.0 sucks!
+http_host = '0.0.0.0'
 http_port = 5047
 
-udp_host  = '0.0.0.0'  # Use the actual IP address, binding to 0.0.0.0 sucks!
+udp_host  = '0.0.0.0'  # Use the actual IP address for UDP!
 udp_port  = 5042
 
-db_url    = 'postgresql://user:password@localhost/gate'
+db_url    = 'postgresql://user:password@localhost/deadlock'
