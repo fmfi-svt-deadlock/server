@@ -1,36 +1,53 @@
 from collections import namedtuple
-from struct import Struct
-from enum import Enum
-from . import unzip
 
-ENDIANITY = '<'  # little-endian, no alignment (i.e. packed)
+def unzip(x): return zip(*x)
+
+class _Type:
+    """Defines a type that can be serialized and unserialized."""
+    def __init__(self, pack, unpack):
+        """
+        pack:   data -> buffer
+        unpack: buffer -> (parsed data, rest of the buffer)
+        """
+        self.pack   = pack
+        self.unpack = unpack
+
+def idf(x): return x
 
 class t:
-    """pieces of struct format strings: docs.python.org/3/library/struct.html"""
-    uint8 = 'B'
-    bytes = lambda sz: '{}s'.format(sz)
+    """Defines a few useful types."""
+    # Note: endianity must be handled once multi-byte numbers are needed
+    tail  = _Type(idf, lambda buf: (buf, bytes([])))
+    uint8 = _Type(lambda x: bytes([x]), lambda buf: (int(buf[0]), buf[1:]))
+    bytes = lambda n: _Type(idf, lambda buf: (buf[:n], buf[n:]))
+    #pstr  = lambda n: _Type(lambda s: [n]+bytes(s) if len(s) <= n else raise ValueError('error when encoding TODO'), lambda buf: (buf[1:buf[0]]), buf[n+1:])
 
 class MyStructMixin:
-    _struct = None
-
+    """Mixin providing the `pack` and `unpack` methods."""
+    
     @classmethod
-    def unpack_from(cls, buf):
-        """Constructs a new instance by unpacking the given buffer.
+    def unpack(cls, data):
+        """Constructs a new instance by unpacking the given buffer."""
+        def _unpack(data):
+            for t in cls._fieldtypes:
+                val, data = t.unpack(data)
+                yield val
+            if len(data) > 0: raise ValueError('buffer size != struct size')
 
-        Returns the new instance and the rest of the buffer.
-        """
-        sz = cls._struct.size
-        head, tail = buf[:sz], buf[sz:]
-        return cls(*cls._struct.unpack(head)), tail
+        return cls(*_unpack(data))
 
     def pack(self):
         """Returns itself packed as `bytes`."""
-        return self._struct.pack(*self)
+        return b''.join([ t.pack(x) for t,x in zip(self._fieldtypes, self) ])
 
 def mystruct(name, *fields):
-    """Creates a namedtuple that can be packed to and unpacked from `bytes`."""
+    """Creates a namedtuple that can be packed to and unpacked from `bytes`.
+
+    `unpack(buf)` will raise `ValueError` if `len(buf)` doesn't exactly match
+    the struct's size.
+    """
     fieldtypes, fieldnames = unzip(fields)
     class Cls(namedtuple(name, fieldnames), MyStructMixin): pass
     Cls.__name__ = name
-    Cls._struct = Struct(ENDIANITY + ''.join(fieldtypes))
+    Cls._fieldtypes = fieldtypes
     return Cls

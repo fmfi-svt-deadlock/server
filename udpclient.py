@@ -15,20 +15,19 @@ def msg(buf):
 def request(mac, msgtype, data):
     key   = get_key_for_mac(mac)
     nonce = os.urandom(18)
-    res = msg(make_packet(PacketHead(PROTOCOL_VERSION, mac, nonce),
-                          RequestHead(msgtype.value),
-                          key,
-                          data))
-    p, payload = parse_packet_head(res)
-    r, t, data = parse_payload(ReplyHead, p, key, payload)
-    return p, r, t, data
+    req = Request(msgtype.value, data)
+    res = msg(make_packet(mac, key, nonce, req).pack())
+    p = parse_packet(res)
+    r = parse_response(p, key)
+    return r
 
-def prettyprint_reply(p, r, t, data):
+def prettyprint_reply(r):
     try:
-        s = ReplyStatus(r.status)
+        t = MsgType(r.msg_type)
+        s = ResponseStatus(r.status)
     except ValueError:
-        raise BadMessageError('Unknown status {}'.format(r.status))
-    return '{} {}: {}'.format(t.name, s.name, data or '(no data)')
+        raise BadMessageError('Unknown type or status {}'.format(r.status))
+    return '{} {}: {}'.format(t.name, s.name, r.data or '(no data)')
 
 if __name__ == '__main__':
     mac, msgtype = sys.argv[1:]
@@ -41,4 +40,4 @@ if __name__ == '__main__':
 
     db.connect(config.db_url)
     reply = request(mac2bytes(mac), t, indata)
-    print(prettyprint_reply(*reply))
+    print(prettyprint_reply(reply))
