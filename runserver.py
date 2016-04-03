@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Gate server runner."""
+"""Deadlock server runner."""
 
-from gateserver import db, controller_server
+from deadserver import controller_server
 import config
 
 if __name__ == '__main__':
-    db.connect(config.db_url)
-    controller_server.serve(config)
+    app = controller_server.DeadServer(config)
+    app.serve()
