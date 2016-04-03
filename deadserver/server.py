@@ -4,11 +4,12 @@ This is not concerned with the protocol details, it only knows how to receive
 requests and send responses, and passes stuff to `controller_api`.
 """
 
-from . import api
-from . import db
-
 import functools
 import socketserver
+
+import records
+
+from . import api
 
 class MessageHandler(socketserver.BaseRequestHandler):
     def __init__(self, api, *args, **kwargs):
@@ -24,8 +25,8 @@ class MessageHandler(socketserver.BaseRequestHandler):
 class DeadServer:
     def __init__(self, config):
         self.config = config
-        self.db_conn = db.Connection(config.db_url)
-        self.handler = functools.partial(MessageHandler, api.API(db_conn=self.db_conn))
+        self.db = records.Database(config.db_url)
+        self.handler = functools.partial(MessageHandler, api.API(db=self.db))
 
         bind_addr = self.config.udp_host, self.config.udp_port
         self.server = socketserver.ThreadingUDPServer(bind_addr, self.handler)

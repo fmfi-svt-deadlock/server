@@ -10,8 +10,8 @@ from .protocol import MsgType, ResponseStatus as Status
 from structparse.types import Tail  # TODO remove
 
 class API:
-    def __init__(self, db_conn):
-        self.db = db_conn
+    def __init__(self, db):
+        self.db = db
 
     def handle_packet(self, in_buf):
         try:
@@ -21,7 +21,7 @@ class API:
             response_packet = protocol.make_response_packet_for(request_header, request.msg_type, status, response_data, get_key=self.get_key)
             return response_packet.pack()
         except protocol.BadMessageError as e:
-            log_bad_message(buf, e)
+            self.log_bad_message(in_buf, e)
 
     # TODO this table will be dynamic via handler registration -- pretend it doesn't exist
     process_request = {
@@ -31,10 +31,10 @@ class API:
 
     def get_key(self, id):
         """Loads the key for this controller from the DB."""
-        rs = self.db.exec_sql('SELECT key FROM controller WHERE id = %s',
-                              (protocol.id2str(id),), ret=True)
-        protocol.check(len(rs) == 1, 'unknown controller ID')
-        return bytes(rs[0]['key'])
+        rows = self.db.query('SELECT key FROM controller WHERE id = :id',
+                             id=protocol.id2str(id)).all()
+        protocol.check(len(rows) == 1, 'unknown controller ID')
+        return bytes(rows[0]['key'])
 
     def log_message(self, controller_id, request, status):
         """TODO"""

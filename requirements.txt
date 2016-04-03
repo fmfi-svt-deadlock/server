@@ -1,6 +1,10 @@
+SQLAlchemy==1.0.12
 coverage==4.0.3
+docopt==0.6.2
 psycopg2==2.6.1
 py==1.4.31
 pytest==2.9.1
 pytest-cov==2.2.1
+records==0.4.3
+tablib==0.11.2
 https://github.com/warner/python-tweetnacl/tarball/b48a25a33f

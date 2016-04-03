@@ -1,14 +1,16 @@
 """Quick & dirty client (i.e. the controller end), used for manual testing of the server."""
 
-import config
-from deadserver import db
-from deadserver.api import *
-from deadserver.protocol import *
 import socket
 import os
 import sys
 
-api = API(db_conn=db.Connection(config.db_url))
+import records
+
+import config
+from deadserver.api import *
+from deadserver.protocol import *
+
+api = API(db=records.Database(config.db_url))
 
 def msg(buf):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
