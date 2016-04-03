@@ -29,6 +29,8 @@ class API:
         MsgType.OPEN: (lambda id, data: ((Status.OK if data == Tail(b'Hello') else Status.ERR), None))
     }
 
+    # TODO if protocol crypto and insides were better separated, this could just create a
+    # {de,en}cryption black box and thereby avoid telling the key to anyone else.
     def get_key(self, id):
         """Loads the key for this controller from the DB."""
         rows = self.db.query('SELECT key FROM controller WHERE id = :id',

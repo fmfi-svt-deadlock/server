@@ -6,15 +6,19 @@ This knows the data format for the various structures in the protocol. See
 
 # TODO: consider [CBOR](http://cbor.io/).
 # TODO: With the faster processor, we probably can afford assymetric crypto. Switch if possible.
+# TODO: separate the 2 layers of the protocol
+# TODO: ... and then blackboxes instead of secret keys
 
 from structparse import struct, types
-import nacl.raw as nacl
+import nacl.secret
 import enum
+
 
 class BadMessageError(Exception): pass
 
 def check(expression, errmsg):
     if not expression: raise BadMessageError(errmsg)
+
 
 PROTOCOL_VERSION = types.Bytes(2)([0,1])
 
@@ -44,17 +48,20 @@ Packet = struct('Packet',
                 (PacketHeader, 'header'),
                 (types.Tail,   'payload'))
 
+
 def id2str(id):
     return ':'.join('{:02x}'.format(x) for x in id.val)
 
 def str2id(s):
     return types.Bytes(6)(bytes.fromhex(s.replace(':', '')))
 
+
 def crypto_unwrap_payload(nonce, payload, key):
-    return nacl.crypto_secretbox_open(payload, nonce, key)
+    return nacl.secret.SecretBox(key).decrypt(payload, nonce)
 
 def crypto_wrap_payload(nonce, payload, key):
-    return nacl.crypto_secretbox(payload, nonce, key)
+    # Note: encrypt returns the ciphertext prepended by nonce. We don't want this, so strip it.
+    return nacl.secret.SecretBox(key).encrypt(payload, nonce)[nacl.secret.SecretBox.NONCE_SIZE:]
 
 def parse_packet(struct, buf, get_key):
     """Parses the buffer into PacketHeader and `struct`, which must be Request or Response.

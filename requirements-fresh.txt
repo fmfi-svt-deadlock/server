@@ -1,4 +1,4 @@
+pynacl
 pytest
 pytest-cov
 records
-https://github.com/warner/python-tweetnacl/tarball/b48a25a33f
