@@ -1,0 +1,5 @@
+Fun problems that I've overcome
+===============================
+
+- stateless is awesome
+- avoid running around with secret keys by passing just a crypto black box (TODO but do it :D), and actually storing / loading the keys encrypted and decrypting only when really needed (TODO also do it :D)
