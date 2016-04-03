@@ -1,3 +1,5 @@
+**Note: This README is out of date. TODO.**
+
 server: the DB + "manager"
 ==========================
 
@@ -37,3 +39,8 @@ Next to do:
 - HTTP: rewrite to use Werkzeug instead of CherryPy
 - fix DB singleton (who wants a singleton?!)
 - CI
+
+Style Guide & such
+------------------
+
+[PEP-8](https://www.python.org/dev/peps/pep-0008/), `import this`. Also: code and design reviews.

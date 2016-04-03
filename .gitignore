@@ -1,5 +1,4 @@
 *.py[co]
 venv/
 config.py
-.*
-!.git*
+.coverage
