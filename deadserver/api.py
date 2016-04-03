@@ -4,8 +4,8 @@ This knows what should happen for a given request. See `controller_protocol` for
 the message format details.
 """
 
-from . import controller_protocol as protocol
-from .controller_protocol import MsgType, ResponseStatus as Status
+from . import protocol
+from .protocol import MsgType, ResponseStatus as Status
 
 from structparse.types import Tail  # TODO remove
 

@@ -4,7 +4,8 @@ This is not concerned with the protocol details, it only knows how to receive
 requests and send responses, and passes stuff to `controller_api`.
 """
 
-from . import controller_api, db
+from .api import API
+from . import db
 import functools
 import socketserver
 
@@ -23,7 +24,7 @@ class DeadServer:
     def __init__(self, config):
         self.config = config
         self.db_conn = db.Connection(config.db_url)
-        self.api = controller_api.API(db_conn=self.db_conn)
+        self.api = API(db_conn=self.db_conn)
 
         bind_addr = self.config.udp_host, self.config.udp_port
         handler = functools.partial(MessageHandler, self.api)

@@ -2,8 +2,8 @@
 
 import config
 from deadserver import db
-from deadserver.controller_api import *
-from deadserver.controller_protocol import *
+from deadserver.api import *
+from deadserver.protocol import *
 import socket
 import os
 import sys
