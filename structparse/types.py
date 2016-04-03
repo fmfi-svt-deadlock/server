@@ -1,6 +1,6 @@
-"""Defines default types for structparse."""
+"""Defines useful simple types for structparse."""
 
-from . import Type
+from .structdef import Type
 
 class _SimpleType(Type):
     def __init__(self, x):
@@ -37,10 +37,12 @@ class _SimpleType(Type):
     def __repr__(self):
         return self.__class__.__name__+'('+repr(self.val)+')'
 
+
 def _tobytes(x):
     if isinstance(x, _SimpleType): return bytes(x.val)
     if isinstance(x, str): return bytes(x, 'utf8')
     return bytes(x)
+
 
 class Uint8(_SimpleType):
     @staticmethod
@@ -54,14 +56,17 @@ class Uint8(_SimpleType):
     def _pack(self):
         return [self.val]
 
+
 class _BytesLike(_SimpleType):
     def __init__(self, arg):
         super().__init__(_tobytes(arg))
+
 
 class Tail(_BytesLike):
     @staticmethod
     def _unpack(buf):
         return buf, b''
+
 
 def Bytes(n):
     class Cls(_BytesLike):
@@ -77,6 +82,7 @@ def Bytes(n):
 
     Cls.__name__ = 'Bytes[{}]'.format(n)
     return Cls
+
 
 def PascalStr(n):
     class Cls(_BytesLike):

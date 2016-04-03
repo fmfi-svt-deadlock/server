@@ -7,9 +7,9 @@ This knows the data format for the various structures in the protocol. See
 # TODO: consider [CBOR](http://cbor.io/).
 # TODO: With the faster processor, we probably can afford assymetric crypto. Switch if possible.
 
-from structparse import mystruct, types
+from structparse import struct, types
 import nacl.raw as nacl
-from enum import Enum
+import enum
 
 class BadMessageError(Exception): pass
 
@@ -18,31 +18,31 @@ def check(expression, errmsg):
 
 PROTOCOL_VERSION = types.Bytes(2)([0,1])
 
-class MsgType(types.Uint8, Enum):
+class MsgType(types.Uint8, enum.Enum):
     OPEN = 1
 
-class ResponseStatus(types.Uint8, Enum):
+class ResponseStatus(types.Uint8, enum.Enum):
     OK        = 0x01
     ERR       = 0x10
     TRY_AGAIN = 0x11
 
-Request = mystruct('Request',
-                   (MsgType,     'msg_type'),
-                   (types.Tail,  'data'    ))
+Request = struct('Request',
+                 (MsgType,     'msg_type'),
+                 (types.Tail,  'data'    ))
 
-Response = mystruct('Response',
-                    (MsgType,        'msg_type'),
-                    (ResponseStatus, 'status'  ),
-                    (types.Tail,     'data'    ))
+Response = struct('Response',
+                  (MsgType,        'msg_type'),
+                  (ResponseStatus, 'status'  ),
+                  (types.Tail,     'data'    ))
 
-PacketHeader = mystruct('PacketHeader',
-                        (types.Bytes(2),  'protocol_version'),
-                        (types.Bytes(6),  'controller_id'   ),
-                        (types.Bytes(18), 'nonce'           ))
+PacketHeader = struct('PacketHeader',
+                      (types.Bytes(2),  'protocol_version'),
+                      (types.Bytes(6),  'controller_id'   ),
+                      (types.Bytes(18), 'nonce'           ))
 
-Packet = mystruct('Packet',
-                  (PacketHeader, 'header'),
-                  (types.Tail,   'payload'))
+Packet = struct('Packet',
+                (PacketHeader, 'header'),
+                (types.Tail,   'payload'))
 
 def id2str(id):
     return ':'.join('{:02x}'.format(x) for x in id.val)

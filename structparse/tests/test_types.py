@@ -1,7 +1,7 @@
 import pytest
 
 from .. import types
-from enum import Enum
+import enum
 
 def test_construction():
     x = types.Uint8(47)
@@ -59,7 +59,7 @@ def test_hashable():
     assert hash(types.Bytes(2)([42,47])) != hash(types.Tail([42,47]))
 
 def test_Enum_works():
-    class T(types.Uint8, Enum):
+    class T(types.Uint8, enum.Enum):
         A = 1
         B = 2
         Z = 255
@@ -71,5 +71,5 @@ def test_Enum_works():
     with pytest.raises(ValueError): T.unpack(b'\x47')
 
     with pytest.raises(ValueError):
-        class T(types.Uint8, Enum):
+        class T(types.Uint8, enum.Enum):
             X = 4742  # does not fit into 1 byte
