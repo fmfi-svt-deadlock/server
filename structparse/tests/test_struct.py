@@ -44,11 +44,11 @@ def strct(Sample, Nested):
 
 @pytest.fixture
 def packed():
-    return b'quux' + b'\x47' + b'\x03foo\x00\x00' + b'kaleraby'
+    return b'quux' + b'\x47' + b'\x03foo\x00' + b'kaleraby'
 
 
 def test_pack(strct, packed):
     assert strct.pack() == packed
 
 def test_unpack(Nested, packed, strct):
-    assert Nested.unpack_all(packed) == strct
+    assert Nested.unpack(packed) == strct

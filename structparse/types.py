@@ -17,8 +17,8 @@ class _SimpleType(Type):
         return bytes(self._pack())
 
     @classmethod
-    def unpack(cls, buf):
-        val, rest = cls._unpack(buf)
+    def unpack_from(cls, buf):
+        val, rest = cls._unpack_from(buf)
         return cls(val), rest
 
     def _validate(self, input):
@@ -46,7 +46,7 @@ def _tobytes(x):
 
 class Uint8(_SimpleType):
     @staticmethod
-    def _unpack(buf):
+    def _unpack_from(buf):
         return int(buf[0]), buf[1:]
 
     @staticmethod
@@ -64,7 +64,7 @@ class _BytesLike(_SimpleType):
 
 class Tail(_BytesLike):
     @staticmethod
-    def _unpack(buf):
+    def _unpack_from(buf):
         return buf, b''
 
 
@@ -77,7 +77,7 @@ def Bytes(n):
             return bytes(arg)
 
         @staticmethod
-        def _unpack(buf):
+        def _unpack_from(buf):
             return buf[:n], buf[n:]
 
     Cls.__name__ = 'Bytes[{}]'.format(n)
@@ -85,22 +85,39 @@ def Bytes(n):
 
 
 def PascalStr(n):
+    """A fixed-length "Pascal string" -- byte 0 is length, the rest is null-padded string content.
+
+    Note that n is the number of bytes in the resulting binary representation, so at most n-1 bytes
+    fit inside.
+    """
+    assert n >= 1, 'Cannot create PascalStr that can fit -1 bytes'
+    assert n-1 <= 0xff, 'Max length of PascalStr must fit into 1 byte'
     class Cls(_BytesLike):
         @staticmethod
         def _validate(arg):
-            if len(arg) > n:
+            if len(arg) > n-1:
                 raise ValueError('string too long (n = {})'.format(n))
 
         @staticmethod
-        def _unpack(buf):
-            if buf[0] > n: raise ValueError('packed string too long (n = {}, buf[0] = {})'.format(n, buf[0]))
-            b, e = buf[0]+1, n+1
-            if buf[b:e] != b'\0'*(e-b): raise ValueError('packed string not null-padded')
-            return buf[1:b], buf[e:]
+        def _unpack_from(buf):
+            buf, tail = buf[:n], buf[n:]
+            s, data = buf[0], buf[1:]
+            if s > n-1: raise ValueError('packed string too long (n-1 = {}, s = {})'.format(n-1, s))
+            result, padding = data[:s], data[s:]
+            if not all([b == 0 for b in padding]): raise ValueError('packed string not null-padded')
+            return result, tail
 
         def _pack(self):
-            padding = n - len(self.val)
+            padding = n-1 - len(self.val)
             return bytes([len(self.val)]) + self.val + b'\0'*padding
 
     Cls.__name__ = 'PascalStr[{}]'.format(n)
     return Cls
+
+
+# Note: if you are looking for Enum, this Just Works with Python's enum.Enum:
+#
+#   class T(types.Uint8, enum.Enum):
+#       A = 1
+#       B = 2
+#       Z = 255

@@ -8,7 +8,7 @@ class Type:
     """Defines a type that can be serialized and unserialized."""
 
     @staticmethod
-    def unpack(buf):
+    def unpack_from(buf):
         """Constructs a Python value from the given buffer.
 
         Signature: buffer -> (parsed data, rest of the buffer)
@@ -22,8 +22,19 @@ class Type:
         """
         raise NotImplementedError
 
-class StructMixin(Type):
-    """Mixin providing the `pack` and `unpack` methods for a struct."""
+    @classmethod
+    def unpack(cls, buf):
+        """Unpacks the whole buffer into this Type.
+
+        Raises ValueError if len(buf) doesn't exactly match the type size.
+        """
+        x, rest = cls.unpack_from(buf)
+        if len(rest) > 0: raise ValueError('buffer size != struct size')
+        return x
+
+
+class _StructMixin(Type):
+    """Mixin providing the `pack`, `unpack` and `unpack_from` methods for a struct."""
     def __new__(cls, *args, **kwargs):
         if len(args) == 1 and len(kwargs) == 0 and args[0].__class__ is cls:
             return args[0]  # assumes immutability
@@ -35,11 +46,11 @@ class StructMixin(Type):
         return super().__new__(cls, **converted)
 
     @classmethod
-    def unpack(cls, buf):
+    def unpack_from(cls, buf):
         """Constructs a new instance by unpacking the given buffer."""
         vals = []
         for t in cls._fieldtypes:
-            val, buf = t.unpack(buf)
+            val, buf = t.unpack_from(buf)
             vals.append(val)
         return cls(*vals), buf
 
@@ -47,17 +58,11 @@ class StructMixin(Type):
         """Returns itself packed as `bytes`."""
         return b''.join([ t.pack(x) for t,x in zip(self._fieldtypes, self) ])
 
-    @classmethod
-    def unpack_all(cls, buf):
-        """raises ValueError if len(buf) doesn't exactly match the struct size."""
-        x, rest = cls.unpack(buf)
-        if len(rest) > 0: raise ValueError('buffer size != struct size')
-        return x
 
 def struct(name, *fields):
     """Creates a "C struct" -- a namedtuple that can be packed and unpacked."""
     fieldtypes, fieldnames = unzip(fields)
-    class Cls(StructMixin, namedtuple(name, fieldnames)): pass
+    class Cls(_StructMixin, namedtuple(name, fieldnames)): pass
     Cls.__name__ = name
     Cls._fieldtypes = fieldtypes
     return Cls

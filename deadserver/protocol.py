@@ -71,11 +71,11 @@ def parse_packet(struct, buf, get_key):
     assert struct in [Request, Response]
 
     try:
-        hdr, tail = PacketHeader.unpack(buf)
+        hdr, tail = PacketHeader.unpack_from(buf)
         check(hdr.protocol_version == PROTOCOL_VERSION, 'Invalid protocol version')
         payload_buf = crypto_unwrap_payload(hdr.controller_id.val + hdr.nonce.val,
                                             tail, get_key(hdr.controller_id))
-        payload = struct.unpack_all(payload_buf)
+        payload = struct.unpack(payload_buf)
     except ValueError as e:
         raise BadMessageError('parse_packet failed') from e
 

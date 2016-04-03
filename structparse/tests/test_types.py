@@ -19,13 +19,13 @@ def test_eq():
 
 def test_Uint8():
     assert types.Uint8(97).pack() == b'a'
-    assert types.Uint8.unpack(b'abcd') == (types.Uint8(97), b'bcd')
+    assert types.Uint8.unpack_from(b'abcd') == (types.Uint8(97), b'bcd')
     with pytest.raises(ValueError): types.Uint8(4742)
 
 def test_Tail():
     assert types.Tail(b'an arbitrarily long whatever').pack() == b'an arbitrarily long whatever'
     assert types.Tail([97, 98, 99, 100]) == types.Tail(b'abcd')
-    assert types.Tail.unpack(b'mrkva') == (types.Tail(b'mrkva'), b'')
+    assert types.Tail.unpack(b'mrkva') == types.Tail(b'mrkva')
 
 def test_Bytes():
     b4 = types.Bytes(4)
@@ -37,21 +37,22 @@ def test_Bytes():
     with pytest.raises(ValueError): b4(b'abcde')
 
     assert b4(b'abcd').pack() == b'abcd'
-    assert b4.unpack(b'abcdefg') == (b4(b'abcd'), b'efg')
-    with pytest.raises(ValueError): b4.unpack(b'abc')
+    assert b4.unpack_from(b'abcdefg') == (b4(b'abcd'), b'efg')
+    with pytest.raises(ValueError): b4.unpack_from(b'abc')
 
 def test_PascalStr():
-    p5 = types.PascalStr(5)
-    assert repr(p5(b'abcd')) == "PascalStr[5](b'abcd')"
+    p6 = types.PascalStr(6)
+    assert repr(p6(b'abcd')) == "PascalStr[6](b'abcd')"
 
-    with pytest.raises(ValueError): p5('Hello World')
+    p6('Hello')  # n-1 bytes fit
+    with pytest.raises(ValueError): p6('Hello!')  # n and more don't
 
-    assert p5('hello').pack() == b'\x05hello'
-    assert p5('hell').pack()  == b'\x04hell\x00'
+    assert p6('hello').pack() == b'\x05hello'
+    assert p6('hell').pack()  == b'\x04hell\x00'
 
-    assert p5.unpack(b'\x03hel\x00\x00 world') == (p5(b'hel'), b' world')
-    with pytest.raises(ValueError): p5.unpack(b'\x03hello world')
-    with pytest.raises(ValueError): p5.unpack(b'\x47anything')
+    assert p6.unpack_from(b'\x03hel\x00\x00 world') == (p6(b'hel'), b' world')
+    with pytest.raises(ValueError): p6.unpack_from(b'\x03hello world')
+    with pytest.raises(ValueError): p6.unpack_from(b'\x47anything')
 
 def test_hashable():
     assert hash(types.Uint8(47)) == hash(types.Uint8(47))
@@ -66,9 +67,9 @@ def test_Enum_works():
 
     assert T(1) == T.A
     assert T.A.pack() == b'\x01'
-    assert T.unpack(b'\xff') == (T.Z, b'')
+    assert T.unpack(b'\xff') == T.Z
     with pytest.raises(ValueError): T(47)
-    with pytest.raises(ValueError): T.unpack(b'\x47')
+    with pytest.raises(ValueError): T.unpack_from(b'\x47')
 
     with pytest.raises(ValueError):
         class T(types.Uint8, enum.Enum):
