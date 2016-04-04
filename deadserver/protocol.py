@@ -23,7 +23,8 @@ def check(expression, errmsg):
 PROTOCOL_VERSION = types.Bytes(2)([0,1])
 
 class MsgType(types.Uint8, enum.Enum):
-    OPEN = 1
+    OPEN     = 1
+    ECHOTEST = 254
 
 class ResponseStatus(types.Uint8, enum.Enum):
     OK        = 0x01
@@ -77,7 +78,7 @@ def parse_packet(struct, buf, get_key):
                                             tail, get_key(hdr.controller_id))
         payload = struct.unpack(payload_buf)
     except ValueError as e:
-        raise BadMessageError('parse_packet failed') from e
+        raise BadMessageError('parsing packet failed') from e
 
     return hdr, payload
 

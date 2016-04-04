@@ -4,10 +4,8 @@ This knows what should happen for a given request. See `controller_protocol` for
 the message format details.
 """
 
+from . import handlers
 from . import protocol
-from .protocol import MsgType, ResponseStatus as Status
-
-from structparse.types import Tail  # TODO remove
 
 class API:
     def __init__(self, db):
@@ -15,19 +13,15 @@ class API:
 
     def handle_packet(self, in_buf):
         try:
-            request_header, request = protocol.parse_packet(protocol.Request, in_buf, get_key=self.get_key)
-            status, response_data = self.process_request[request.msg_type](request_header.controller_id, request.data)  # TODO this will be rewritten
+            request_header, request = protocol.parse_packet(protocol.Request, in_buf, self.get_key)
+            handler = handlers.get_handler_for(request.msg_type)
+            status, response = handler(request_header.controller_id, request.data.val, api=self)
             self.log_message(request_header.controller_id, request, status)
-            response_packet = protocol.make_response_packet_for(request_header, request.msg_type, status, response_data, get_key=self.get_key)
+            response_packet = protocol.make_response_packet_for(request_header, request.msg_type,
+                status, response, get_key=self.get_key)
             return response_packet.pack()
         except protocol.BadMessageError as e:
             self.log_bad_message(in_buf, e)
-
-    # TODO this table will be dynamic via handler registration -- pretend it doesn't exist
-    process_request = {
-        # TODO this should get data.isic_id, except that's not implemented yet and structparse needs unions and stuff
-        MsgType.OPEN: (lambda id, data: ((Status.OK if data == Tail(b'Hello') else Status.ERR), None))
-    }
 
     # TODO if protocol crypto and insides were better separated, this could just create a
     # {de,en}cryption black box and thereby avoid telling the key to anyone else.
@@ -46,5 +40,3 @@ class API:
     def log_bad_message(self, buf, e):
         """TODO"""
         raise e
-
-assert set(protocol.MsgType) == set(API.process_request), 'Not all message types handled'

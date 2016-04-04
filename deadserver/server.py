@@ -24,8 +24,8 @@ class MessageHandler(socketserver.BaseRequestHandler):
 
 class DeadServer:
     def __init__(self, config):
-        self.config = config
-        self.db = records.Database(config.db_url)
+        self.config  = config
+        self.db      = records.Database(self.config.db_url)
         self.handler = functools.partial(MessageHandler, api.API(db=self.db))
 
         bind_addr = self.config.udp_host, self.config.udp_port
