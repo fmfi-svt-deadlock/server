@@ -1,0 +1,4 @@
+pynacl
+pytest
+pytest-cov
+records
