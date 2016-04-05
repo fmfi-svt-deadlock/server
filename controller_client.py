@@ -10,7 +10,7 @@ import config
 from deadserver.api import *
 from deadserver.protocol import *
 
-api = API(db=records.Database(config.db_url))
+api = API(config=config, db=records.Database(config.db_url))
 
 def msg(buf):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

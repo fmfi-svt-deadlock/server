@@ -8,8 +8,9 @@ from . import handlers
 from . import protocol
 
 class API:
-    def __init__(self, db):
-        self.db = db
+    def __init__(self, config, db):
+        self.config = config
+        self.db     = db
 
     def handle_packet(self, in_buf):
         try:

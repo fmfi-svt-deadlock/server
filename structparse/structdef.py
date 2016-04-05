@@ -29,7 +29,7 @@ class Type:
         Raises ValueError if len(buf) doesn't exactly match the type size.
         """
         x, rest = cls.unpack_from(buf)
-        if len(rest) > 0: raise ValueError('buffer size != struct size')
+        if rest: raise ValueError('buffer size != struct size')
         return x
 
 
