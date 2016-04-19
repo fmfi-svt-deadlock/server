@@ -1,7 +1,7 @@
 """The controller ↔ server protocol message structure.
 
 This knows the data format for the various structures in the protocol. See
-`controller_api` for the behavior / business logic.
+`api.py` for the behavior / business logic.
 """
 
 # TODO: consider [CBOR](http://cbor.io/).
@@ -46,7 +46,7 @@ PacketHeader = struct('PacketHeader',
                       (types.Bytes(18), 'nonce'           ))
 
 Packet = struct('Packet',
-                (PacketHeader, 'header'),
+                (PacketHeader, 'header' ),
                 (types.Tail,   'payload'))
 
 

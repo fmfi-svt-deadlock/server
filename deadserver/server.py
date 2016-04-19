@@ -5,7 +5,6 @@ This only knows how to receive requests and send responses -- it is just a thin 
 
 """
 
-import functools
 import socketserver
 
 import records

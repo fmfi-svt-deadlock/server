@@ -18,8 +18,8 @@ class API:
             handler = handlers.get_handler_for(request.msg_type)
             status, response = handler(request_header.controller_id, request.data.val, api=self)
             self.log_message(request_header.controller_id, request, status)
-            response_packet = protocol.make_response_packet_for(request_header, request.msg_type,
-                status, response, get_key=self.get_key)
+            response_packet = protocol.make_response_packet_for(
+                request_header, request.msg_type, status, response, get_key=self.get_key)
             return response_packet.pack()
         except protocol.BadMessageError as e:
             self.log_bad_message(in_buf, e)
