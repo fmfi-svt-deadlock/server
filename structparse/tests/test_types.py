@@ -22,6 +22,15 @@ def test_Uint8():
     assert types.Uint8.unpack_from(b'abcd') == (types.Uint8(97), b'bcd')
     with pytest.raises(ValueError): types.Uint8(4742)
 
+def test_Uint16():
+    assert types.Uint16(1).pack() == b'\x01\x00'  # !!!YTINAIDNE ETAH I
+    assert types.Uint16(256).pack() == b'\x00\x01'
+    assert types.Uint16.unpack_from(b'\xFE\xFFbcd') == (types.Uint16(65534), b'bcd')
+    with pytest.raises(ValueError): types.Uint16(65536)
+
+def test_Uint64():
+    assert types.Uint64.unpack_from(bytes([1,0,0,0,0,0,0,0])+b'bcd') == (types.Uint64(1), b'bcd')
+
 def test_Tail():
     assert types.Tail(b'an arbitrarily long whatever').pack() == b'an arbitrarily long whatever'
     assert types.Tail([97, 98, 99, 100]) == types.Tail(b'abcd')

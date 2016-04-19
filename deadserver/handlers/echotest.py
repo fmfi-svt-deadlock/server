@@ -1,4 +1,4 @@
-"""Handler for ECHOTEST requests."""
+"""Handler for ECHOTEST requests: echo for testing purposes"""
 
 from ..protocol import MsgType, ResponseStatus
 

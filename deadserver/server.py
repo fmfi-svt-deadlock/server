@@ -12,7 +12,10 @@ import records
 from . import api
 
 def serve(config):
-    app = api.API(config=config, db=records.Database(config.db_url))
+    db = records.Database(config.db_url)
+    db.db.execution_options(isolation_level='AUTOCOMMIT')
+
+    app = api.API(config=config, db=db)
 
     class MessageHandler(socketserver.BaseRequestHandler):
         def handle(self):
@@ -21,5 +24,5 @@ def serve(config):
             out_packet = app.handle_packet(in_packet)
             if out_packet: socket.sendto(out_packet, self.client_address)
 
-    server = socketserver.ThreadingUDPServer((config.udp_host, config.udp_port), MessageHandler)
+    server = socketserver.ThreadingUDPServer((config.host, config.port), MessageHandler)
     server.serve_forever()

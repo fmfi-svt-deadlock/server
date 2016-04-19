@@ -9,5 +9,8 @@ def handles(msg_type):
         return fn
     return decorator
 
-def get_handler_for(msg_type):
-    return _all_handlers[msg_type]
+def get_handler_for(msg_type, allowed):
+    if msg_type in allowed and msg_type in _all_handlers:
+        return _all_handlers[msg_type]
+    else:
+        return lambda *args, **kwargs: print('unhandled MsgType: {}'.format(msg_type))

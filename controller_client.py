@@ -14,7 +14,7 @@ api = API(config=config, db=records.Database(config.db_url))
 
 def msg(buf):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.sendto(buf, (config.udp_host, config.udp_port))
+    sock.sendto(buf, (config.host, config.port))
     return sock.recv(1024)
 
 def send(id, msgtype, data):
@@ -25,13 +25,13 @@ def send(id, msgtype, data):
     return parse_packet(Response, res_packet, get_key=api.get_key)
 
 if __name__ == '__main__':
-    mac, msgtype = sys.argv[1:]
+    mac, msgtype, *toeval = sys.argv[1:]
     try:
         t = MsgType[msgtype.upper()]
     except KeyError:
         sys.exit('No such message type: '+msgtype)
 
-    indata = sys.stdin.buffer.read()
+    indata = eval(' '.join(toeval)) if toeval else sys.stdin.buffer.read()
 
     hdr, res = send(str2id(mac), t, indata)
 

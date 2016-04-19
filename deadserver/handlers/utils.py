@@ -22,5 +22,5 @@ def pack_outdata(fn):
     @functools.wraps(fn)
     def decorated(controller_id, indata, api):
         status, outdata = fn(controller_id, indata, api)
-        return status, outdata.pack()
+        return status, (outdata.pack() if outdata else None)
     return decorated

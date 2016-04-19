@@ -1,6 +1,12 @@
 """Defines useful simple types for structparse."""
 
+import struct
+
 from .structdef import Type
+
+
+ENDIANITY='<'  # for multi-byte integers
+
 
 class _SimpleType(Type):
     def __init__(self, x):
@@ -44,18 +50,25 @@ def _tobytes(x):
     return bytes(x)
 
 
-class Uint8(_SimpleType):
-    @staticmethod
-    def _unpack_from(buf):
-        return int(buf[0]), buf[1:]
+class _Uint(_SimpleType):
+    @classmethod
+    def _sz(cls): return struct.calcsize(cls._fmt)
 
-    @staticmethod
-    def _validate(x):
-        if not 0 <= x <= 0xff: raise ValueError('{} is not a 1-byte unsigned int'.format(x))
+    @classmethod
+    def _unpack_from(cls, buf):
+        return struct.unpack(ENDIANITY+cls._fmt, buf[:cls._sz()])[0], buf[cls._sz():]
+
+    def _validate(self, x):
+        t = 256**self._sz()
+        if not 0 <= x < t: raise ValueError('{} is not a {}-byte uint'.format(x, self._sz()))
 
     def _pack(self):
-        return [self.val]
+        return struct.pack(ENDIANITY+self._fmt, self.val)
 
+class Uint8(_Uint):  _fmt = 'B'
+class Uint16(_Uint): _fmt = 'H'
+class Uint32(_Uint): _fmt = 'I'
+class Uint64(_Uint): _fmt = 'Q'
 
 class _BytesLike(_SimpleType):
     def __init__(self, arg):

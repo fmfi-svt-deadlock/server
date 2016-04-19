@@ -29,6 +29,8 @@ to do this differently, add your handlers below.
 
 from . import echotest
 from . import open
+from . import xfer
+from . import ping
 
 ####################################################################################################
 

@@ -4,6 +4,8 @@ This knows what should happen for a given request. See `controller_protocol` for
 the message format details.
 """
 
+from common import cfiles
+
 from . import handlers
 from . import protocol
 
@@ -11,12 +13,16 @@ class API:
     def __init__(self, config, db):
         self.config = config
         self.db     = db
+        self.cfiles = cfiles.ControllerFiles(self.config.controller_files_path)
+        self.allowed_msg_types = { protocol.MsgType[x] for x in config.allowed_msg_types }
 
     def handle_packet(self, in_buf):
         try:
             request_header, request = protocol.parse_packet(protocol.Request, in_buf, self.get_key)
-            handler = handlers.get_handler_for(request.msg_type)
-            status, response = handler(request_header.controller_id, request.data.val, api=self)
+            handler = handlers.get_handler_for(request.msg_type, self.allowed_msg_types)
+            result = handler(request_header.controller_id, request.data.val, api=self)
+            if not result: return None
+            status, response = result
             self.log_message(request_header.controller_id, request, status)
             response_packet = protocol.make_response_packet_for(
                 request_header, request.msg_type, status, response, get_key=self.get_key)

@@ -23,8 +23,10 @@ def check(expression, errmsg):
 PROTOCOL_VERSION = types.Bytes(2)([0,1])
 
 class MsgType(types.Uint8, enum.Enum):
-    OPEN     = 1
-    ECHOTEST = 254
+    PING     = 0x01
+    XFER     = 0x02
+    OPEN     = 0x10
+    ECHOTEST = 0xee
 
 class ResponseStatus(types.Uint8, enum.Enum):
     OK        = 0x01

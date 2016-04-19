@@ -1,9 +1,30 @@
 """The server configuration."""
 
+### Resources (such as ports, DB, filesystem) ######################################################
+
+# deadserver binds to this address; must be reachable by controllers
+host = '0.0.0.0'  # Use the actual IP address for UDP!
+port = 5042
+
+# HTTP API server binds to this address
 http_host = '0.0.0.0'
 http_port = 5047
 
-udp_host  = '0.0.0.0'  # Use the actual IP address for UDP!
-udp_port  = 5042
-
 db_url    = 'postgresql://user:password@localhost/deadlock'
+
+
+# path to store files meant to be XFER'ed to controllers
+# must be writable by deadserver, but need not be persistent
+controller_files_path = '/tmp/deadserver-controller-files'
+
+### Application settings ###########################################################################
+
+# Process only these message types.
+allowed_msg_types = { 'PING', 'XFER', 'OPEN', 'ECHOTEST' }
+
+# Run only the following batch job types.
+allowed_batch_jobs = { 'offlinedb' }
+
+### Performance-related options ####################################################################
+
+offlinedb_num_worker_threads = 8
