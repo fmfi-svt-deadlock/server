@@ -17,5 +17,24 @@ Setup
    - fish: `. venv/bin/activate.fish`
    - csh, tcsh: `source venv/bin/activate.csh`
 3. Install dependencies if necessary: `pip install -r requirements.txt`
+4. configure: `cp config.py{.example,}; $EDITOR config.py`
+5. bootstrap (create DB tables and such): `./bootstrap.py`
+6. run with `./runserver.py`;  
+   run the HTTP API server with `./runhttp.py`
 
-The rest doesn't exist yet.
+Running tests
+-------------
+
+1. Edit configuration: `cp tests/config.py{.example,}; $EDITOR tests/config.py`
+   A real Postgres DB is used, you need to specify the connection string.
+2. run with `py.test tests/`  
+   or `py.test --cov gateserver/ --cov-report term-missing tests/` for coverage report
+
+Next to do:
+-----------
+
+- the controller end
+- wrap/unwrap NaCl
+- HTTP: rewrite to use Werkzeug instead of CherryPy
+- fix DB singleton (who wants a singleton?!)
+- CI

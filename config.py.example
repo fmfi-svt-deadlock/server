@@ -1,0 +1,5 @@
+"""The server configuration."""
+
+http_port = 5047
+udp_port  = 5042
+db_url    = 'postgresql://user:password@localhost/gate'

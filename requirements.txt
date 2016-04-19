@@ -1,2 +1,9 @@
+CherryPy==3.6.0
+cov-core==1.15.0
+coverage==3.7.1
 psycopg2==2.5.4
+py==1.4.26
+pytest==2.6.4
+pytest-cov==1.8.1
+requests==2.5.1
 https://github.com/warner/python-tweetnacl/tarball/b48a25a33f
