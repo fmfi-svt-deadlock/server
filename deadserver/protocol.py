@@ -102,5 +102,6 @@ def make_response_packet_for(request_header, msg_type, status, response_data, ge
     response = Response(msg_type=msg_type,
                         status=status,
                         data=response_data)
-    response_nonce = bytearray(request_header.nonce.val); response_nonce[-1] ^= 0x1
+    response_nonce = bytearray(request_header.nonce.val)
+    response_nonce[-1] ^= 0x1
     return make_packet(request_header.controller_id, response_nonce, response, get_key)

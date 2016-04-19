@@ -34,7 +34,7 @@ class API:
     # {de,en}cryption black box and thereby avoid telling the key to anyone else.
     def get_key(self, id):
         """Loads the key for this controller from the DB."""
-        rows = self.db.query('SELECT key FROM controller WHERE id = :id',
+        rows = self.db.query('SELECT key FROM controller WHERE mac = :id',
                              id=protocol.id2str(id)).all()
         protocol.check(len(rows) == 1, 'unknown controller ID')
         return bytes(rows[0]['key'])
