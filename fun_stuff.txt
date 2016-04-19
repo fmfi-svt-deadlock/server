@@ -2,6 +2,17 @@ Fun problems that I've overcome
 ===============================
 
 - stateless is awesome
+  + failover
+  + with round robin on servers: changing outer packet version on the fly by deploying an old and a new server :D
 - avoid running around with secret keys by passing just a crypto black box (TODO but do it :D), and actually storing / loading the keys encrypted and decrypting only when really needed in order to avoid e.g. accidentally logging it (TODO also do it :D)
+- generic, yet not too hairy rules:
+  + separated application-level and internal rules
+  + internal are generic enough, yet easy to compile by humans and computers
 - extensibility + runtime configuration for packet types
 - extensibility for "batch jobs" (e.g. for local dbs creation)
+- two databases, general simple + application-specific human-friendly rules => no application-specific logic that would limit stuff here, yet possibility of being user-friendly; no need to deal with intermediate states here
+- expressions in rules: AND, OR, NOT exchanged for INCLUDE, EXCLUDE because evaluating NOT is either ugly or we need to remember complement which is from the user's viewpoint unexpectedly expensive
+  + => evaluation in DB itself, easy to implement incremental re-evaluation => FAST! (optimized for infrequent updates)
+
+
+The simplest, computationally weakest part of the system is not the controller or whatever. It is the user.
