@@ -1,3 +1,5 @@
+**Newest version (unreviewed) is in [the `devel` branch](https://github.com/fmfi-svt-deadlock/server/tree/devel).**
+
 server: the DB + "manager"
 ==========================
 
