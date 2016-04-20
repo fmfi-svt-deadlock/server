@@ -7,6 +7,8 @@
 -- `01-materialize-rules.sql`) instead of the source data. Also, they fire many times and the client
 -- is expected to debounce them.
 
+-- Note: Don't forget to update WHEN clauses when changing scheme!
+
 -- TODO for now these just say "something changed" and trigger a full rebuild, but it would be neat
 -- to rebuild only as needed
 
@@ -28,7 +30,14 @@ CREATE TRIGGER rule_change AFTER INSERT OR UPDATE OR DELETE OR TRUNCATE ON rule
                EXECUTE PROCEDURE notify_trigger('rule_change');
 
 -- on controller or accesspoint change
-CREATE TRIGGER controller_change AFTER INSERT OR UPDATE OR DELETE OR TRUNCATE ON controller
+CREATE TRIGGER controller_change AFTER INSERT OR DELETE OR TRUNCATE ON controller
                EXECUTE PROCEDURE notify_trigger('controller_change');
-CREATE TRIGGER accesspoint_change AFTER INSERT OR UPDATE OR DELETE OR TRUNCATE ON accesspoint
+CREATE TRIGGER controller_update AFTER UPDATE ON controller FOR EACH ROW
+               WHEN (OLD.mac IS DISTINCT FROM NEW.mac)
+               EXECUTE PROCEDURE notify_trigger('controller_change');
+
+CREATE TRIGGER accesspoint_change AFTER INSERT OR DELETE OR TRUNCATE ON accesspoint
+               EXECUTE PROCEDURE notify_trigger('controller_change');
+CREATE TRIGGER accesspoint_update AFTER UPDATE ON accesspoint FOR EACH ROW
+               WHEN ((OLD.ip, OLD.type, OLD.controller_id) IS DISTINCT FROM (NEW.ip, NEW.type, NEW.controller_id))
                EXECUTE PROCEDURE notify_trigger('controller_change');

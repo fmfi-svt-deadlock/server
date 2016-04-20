@@ -1,5 +1,7 @@
 -- DeadServer's database table definitions
 
+-- Note: Don't forget to update WHEN clauses in `02-triggers.sql` when changing scheme!
+
 ----- BASIC DATA -----------------------------------------------------------------------------------
 
 CREATE TABLE controller (
