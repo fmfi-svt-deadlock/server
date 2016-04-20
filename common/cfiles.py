@@ -23,7 +23,7 @@ class ControllerFiles():
 
     def _real_name(self, controller_id, name):
         if os.sep in name: raise ValueError('file name may not contain directories')
-        for_dir = protocol.id2str(controller_id) if controller_id else COMMON_DIR
+        for_dir = protocol.show_id(controller_id) if controller_id else COMMON_DIR
         return os.path.join(self.path, for_dir, name)
 
     def open(self, name, for_id=None, *args, **kwargs):

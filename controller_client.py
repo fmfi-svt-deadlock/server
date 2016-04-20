@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     indata = eval(' '.join(toeval)) if toeval else sys.stdin.buffer.read()
 
-    hdr, res = send(str2id(mac), t, indata)
+    hdr, res = send(read_id(mac), t, indata)
 
     print(' * * * as {} sent request: {}'.format(mac, str(t)))
     print(indata)

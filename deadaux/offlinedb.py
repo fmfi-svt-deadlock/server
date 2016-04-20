@@ -23,7 +23,7 @@ WAIT_BEFORE_REBUILD = 5  # seconds; wait for the DB to settle, to avoid useless 
 # TODO one day take specific actions depending on which one instead of rebuilding everything
 NOTIFY_CHANNELS = { 'identity_expr_change', 'rule_change', 'controller_change' }
 
-log = logging.getLogger('offlinedb')
+log = logging.getLogger(__name__)
 db  = records.Database(config.db_url); db.db.execution_options(isolation_level='AUTOCOMMIT')
 cf  = cfiles.ControllerFiles(config.controller_files_path)
 

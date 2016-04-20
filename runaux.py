@@ -3,31 +3,25 @@
 
 import argparse
 import logging
+import logging.config
 import threading
 
 import deadaux
 import config
 
-argparser = argparse.ArgumentParser(description='Run auxiliary jobs for Deadlock server')
-argparser.add_argument("-l", "--log", help='log level', nargs='?', default='WARNING')
+log = logging.getLogger(__name__)
 
-def setup_logging(loglevel):  # "Python is one of the worst languages to write Java in."
-    logger = logging.getLogger('')
-    logger.setLevel(loglevel)
-    ch = logging.StreamHandler()
-    ch.setLevel(loglevel)
-    ch.setFormatter(logging.Formatter('%(name)s %(levelname)s %(message)s'))
-    logger.addHandler(ch)
-
-if __name__ == '__main__':
-    args = argparser.parse_args()
-    setup_logging(args.log)
-
-    threads = set()
+def run_all():
+    threads = []
     for jobname in config.allowed_batch_jobs:
         job = getattr(deadaux, jobname, None)
         if job:
             t = threading.Thread(target=job.start, kwargs=dict(config=config))
             t.start()
-            threads.add(t)
+            threads.append(t)
+            log.info('started job: {}'.format(jobname))
     for t in threads: t.join()
+
+if __name__ == '__main__':
+    logging.config.dictConfig(config.logging_config)
+    run_all()

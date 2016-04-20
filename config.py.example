@@ -28,3 +28,11 @@ allowed_batch_jobs = { 'offlinedb' }
 ### Performance-related options ####################################################################
 
 offlinedb_num_worker_threads = 8
+
+### Logging config #################################################################################
+
+# logging_config = yaml.load(open('./logging_config.prod.yml'))
+logging_config = yaml.load(open('./logging_config.devel.yml'))
+
+# when logging the full message buffer, save at most...
+log_message_bytes = 1024

@@ -1,9 +1,9 @@
 DB_URL = $(shell python -c 'import config; print(config.db_url)')
 
 runall:
-	python runsrv.py --log=DEBUG > deadsrv.log &
-	python runapi.py --log=DEBUG > deadapi.log &
-	python runaux.py --log=DEBUG > deadaux.log &
+	python runsrv.py &
+	python runapi.py &
+	python runaux.py &
 
 watch:
 	echo Not implemented yet

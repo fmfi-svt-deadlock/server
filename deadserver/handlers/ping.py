@@ -21,7 +21,7 @@ Ping = struct('Ping',
 @utils.pack_outdata
 def handle(controller_id, req, api):
     api.db.query("UPDATE controller SET last_seen = :t, db_version = :db, fw_version = :fw WHERE mac = :id",
-                 id=protocol.id2str(controller_id), t=datetime.now(),
+                 id=protocol.show_id(controller_id), t=datetime.now(),
                  db=req.db_version.val, fw=req.fw_version.val)
 
     available_files = [ filetypes.filemeta(f) for f in api.cfiles.ls_for(controller_id) ]

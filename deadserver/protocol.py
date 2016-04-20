@@ -1,13 +1,15 @@
 """The controller ↔ server protocol message structure.
 
 This knows the data format for the various structures in the protocol. See
-`api.py` for the behavior / business logic.
+`api` for the behavior / business logic.
 """
 
 # TODO: consider [CBOR](http://cbor.io/).
 # TODO: With the faster processor, we probably can afford assymetric crypto. Switch if possible.
 # TODO: separate the 2 layers of the protocol
 # TODO: ... and then blackboxes instead of secret keys
+
+import binascii
 
 from structparse import struct, types
 import nacl.secret
@@ -52,18 +54,24 @@ Packet = struct('Packet',
                 (types.Tail,   'payload'))
 
 
-def id2str(id):
+def show_id(id):
+    """Returns string representation of a controller ID."""
     return ':'.join('{:02x}'.format(x) for x in id.val)
 
-def str2id(s):
+def read_id(s):
+    """Returns controller ID from its string representation."""
     return types.Bytes(6)(bytes.fromhex(s.replace(':', '')))
+
+def show_nonce(nonce):
+    """Returns string representation of the nonce. Shortens to first 4 bytes only."""
+    return binascii.hexlify(nonce.val[:4]).decode('ascii')
 
 
 def crypto_unwrap_payload(nonce, payload, key):
     return nacl.secret.SecretBox(key).decrypt(payload, nonce)
 
 def crypto_wrap_payload(nonce, payload, key):
-    # Note: encrypt returns the ciphertext prepended by nonce. We don't want this, so strip it.
+    # encrypt returns the ciphertext prepended by nonce. We don't want this, so strip it.
     return nacl.secret.SecretBox(key).encrypt(payload, nonce)[nacl.secret.SecretBox.NONCE_SIZE:]
 
 def parse_packet(struct, buf, get_key):

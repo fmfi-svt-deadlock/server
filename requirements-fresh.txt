@@ -3,3 +3,4 @@ pynacl
 pytest
 pytest-cov
 records
+pyyaml
