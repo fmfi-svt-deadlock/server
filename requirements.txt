@@ -1,3 +1,4 @@
+CherryPy==5.1.0
 PyNaCl==1.0.1
 PyYAML==3.11
 SQLAlchemy==1.0.12
