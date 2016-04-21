@@ -42,4 +42,7 @@ Next to do:
 Style Guide & such
 ------------------
 
-[PEP-8](https://www.python.org/dev/peps/pep-0008/), `import this`. Also: code and design reviews.
+- [PEP-8](https://www.python.org/dev/peps/pep-0008/)
+  - linting with `pep8 --ignore=E241,E302 --max-line-length=100`
+- `import this`
+- code and design reviews

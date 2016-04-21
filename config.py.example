@@ -1,5 +1,7 @@
 """The server configuration."""
 
+import yaml  # for lazy people who don't like typing
+
 ### Resources (such as ports, DB, filesystem) ######################################################
 
 # deadserver binds to this address; must be reachable by controllers
@@ -11,7 +13,6 @@ http_host = '0.0.0.0'
 http_port = 5047
 
 db_url    = 'postgresql://user:password@localhost/deadlock'
-
 
 # path to store files meant to be XFER'ed to controllers
 # must be writable by deadserver, but need not be persistent
