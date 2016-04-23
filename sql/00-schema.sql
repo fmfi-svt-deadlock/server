@@ -91,8 +91,9 @@ CREATE TABLE rule (
 ----- AUXILIARY (ACCESS LOGS) ----------------------------------------------------------------------
 
 CREATE TABLE accesslog (
+    id            serial    PRIMARY KEY,
     time          timestamp NOT NULL,
     controller_id integer   NOT NULL REFERENCES controller,
-    card          bytea,
+    card          bytea     NOT NULL,
     allowed       boolean   NOT NULL
 );

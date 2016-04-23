@@ -21,10 +21,10 @@ controller_files_path = '/tmp/deadserver-controller-files'
 ### Application settings ###########################################################################
 
 # Process only these message types.
-allowed_msg_types = { 'PING', 'XFER', 'OPEN', 'ECHOTEST' }
+allowed_msg_types = {'PING', 'XFER', 'ALOG', 'OPEN', 'ECHOTEST'}
 
 # Run only the following batch job types.
-allowed_batch_jobs = { 'offlinedb' }
+allowed_batch_jobs = {'offlinedb'}
 
 ### Performance-related options ####################################################################
 

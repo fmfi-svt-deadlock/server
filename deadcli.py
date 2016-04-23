@@ -17,11 +17,14 @@ import sqlalchemy.exc
 import config
 
 class myconfig:
-    initdb_files = [ os.path.join(os.path.dirname(__file__), f) for f in
-        [ 'sql/00-schema.sql', 'sql/01-materialize-rules.sql', 'sql/02-triggers.sql' ] ]
+    initdb_files = [os.path.join(os.path.dirname(__file__), f) for f in [
+                    'sql/00-schema.sql',
+                    'sql/01-materialize-rules.sql',
+                    'sql/02-triggers.sql',
+                    'sql/03-api-triggers.sql']]
 
 def opendb():
-    db  = records.Database(config.db_url)
+    db = records.Database(config.db_url)
     db.db.execution_options(isolation_level='AUTOCOMMIT')
     return db
 
@@ -72,15 +75,17 @@ def writeconfig(mac, file):
                         'FROM controller c LEFT OUTER JOIN accesspoint p ON c.id = p.controller_id '
                         'WHERE mac = :mac', mac=mac).all()
         # print(rows)
-        if len(rows) != 1: die('Unknown controller MAC')
+        if len(rows) != 1:
+            die('Unknown controller MAC')
         r = rows[0]
         click.echo('mac = {}, ip = {}'.format(r.mac, r.ip))
         if r.mac and r.ip and r.key:
-            file.write('{}\n{}\n{}\n'.format(r.mac, r.ip, binascii.hexlify(bytes(r.key)).decode('utf-8')))
+            file.write('{}\n{}\n{}\n'.format(
+                r.mac, r.ip, binascii.hexlify(bytes(r.key)).decode('utf-8')))
         else:
             die('Config incomplete, giving up.')
 
-### ACCESSPOINT COMMANDS ############################################################################
+### ACCESSPOINT COMMANDS ###########################################################################
 
 @cli.group()
 def accesspoint():
@@ -138,7 +143,7 @@ def newdb(extra):
     with opendb() as db:
         click.echo('dropping all tables')
         db.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public;')
-        for f in myconfig.initdb_files+list(extra):
+        for f in myconfig.initdb_files + list(extra):
             db.query_file(f)
             click.echo('applying file: {}'.format(f))
 

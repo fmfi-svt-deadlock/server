@@ -71,3 +71,7 @@ ALTER SEQUENCE time_spec_id_seq RESTART WITH 256;
 INSERT INTO rule (priority, aptype, time_spec, expr, rtype) VALUES (10, 1, 0, 3, 'ALLOW');
 INSERT INTO rule (priority, aptype, time_spec, expr, rtype) VALUES (30, 1, 1, 4, 'ALLOW');
 INSERT INTO rule (priority, aptype, time_spec, expr, rtype) VALUES (10, 2, 2, 0, 'ALLOW');
+
+
+INSERT INTO accesslog (time, controller_id, card, allowed) VALUES (now(), 1, 'hello', true);
+INSERT INTO accesslog (time, controller_id, card, allowed) VALUES (now(), 2, 'world', false);

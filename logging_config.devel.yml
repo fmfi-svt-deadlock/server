@@ -5,14 +5,23 @@ loggers:
   '':
     handlers: [ console ]
     level: DEBUG
+  cherrypy:
+    handlers: [ cherrypy_console ]
+    propagate: False
 handlers:
   console:
     class: logging.StreamHandler
     formatter: f
     level: DEBUG
+  cherrypy_console:
+    class: logging.StreamHandler
+    formatter: cherrypy
+    level: INFO
 formatters:
   f:
     (): 'common.utils.logging.Formatter'
     format: '[%(levelname)-8s] %(name)s %(message)s'
+  cherrypy:
+    format: '[%(levelname)-8s] %(message)s'
 
 disable_existing_loggers: False

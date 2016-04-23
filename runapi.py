@@ -8,4 +8,5 @@ import config
 
 if __name__ == '__main__':
     logging.config.dictConfig(config.logging_config)
+    server.kill_default_logging()
     server.serve(config)

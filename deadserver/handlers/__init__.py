@@ -27,6 +27,7 @@ to do this differently, add your handlers below.
 
 ### LIST OF ALL STANDARD HANDLER IMPORTS ###########################################################
 
+from . import alog
 from . import echotest
 from . import open
 from . import xfer
