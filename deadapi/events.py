@@ -71,6 +71,7 @@ class EventSource:
     def GET(self):
         cherrypy.response.headers['Content-Type']  = 'text/event-stream'
         cherrypy.response.headers['Cache-Control'] = 'no-cache'
+        cherrypy.response.headers['X-Accel-Buffering'] = 'no'
 
         def stream():
             yield '\n'  # push headers
