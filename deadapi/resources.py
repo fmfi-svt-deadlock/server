@@ -24,7 +24,7 @@ class AccessLog(ResourceWithDB):
             'SELECT a.id, a.time, p.name AS accesspoint, c.mac AS controller, card, allowed '
             'FROM accesslog a LEFT OUTER JOIN controller c ON a.controller_id = c.id '
             '     LEFT OUTER JOIN accesspoint p ON c.id = p.controller_id '
-            'ORDER BY time').all(as_dict=True)
+            'ORDER BY time DESC LIMIT 100').all(as_dict=True)
 
 class Status(ResourceWithDB):
     def GET(self):
@@ -33,7 +33,7 @@ class Status(ResourceWithDB):
             '       last_seen, db_version, fw_version '
             'FROM accesspoint p LEFT OUTER JOIN aptype t ON p.type = t.id '
             '       LEFT OUTER JOIN controller c ON p.controller_id = c.id '
-            'ORDER BY p.name').all(as_dict=True)
+            'ORDER BY type').all(as_dict=True)
 
 class AccessPoint(ResourceWithDB):
     def GET(self, name=None):

@@ -9,3 +9,9 @@
 -- on access log change
 CREATE TRIGGER accesslog_change AFTER INSERT OR UPDATE OR DELETE OR TRUNCATE ON accesslog
                EXECUTE PROCEDURE notify_trigger('accesslog_change');
+
+-- on system status change
+CREATE TRIGGER status_change AFTER INSERT OR UPDATE OR DELETE OR TRUNCATE ON accesslog
+               EXECUTE PROCEDURE notify_trigger('status_change');
+CREATE TRIGGER status_change AFTER INSERT OR UPDATE OR DELETE OR TRUNCATE ON controller
+               EXECUTE PROCEDURE notify_trigger('status_change');

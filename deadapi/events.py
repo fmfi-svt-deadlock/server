@@ -33,6 +33,7 @@ class Events:
                 conn.poll()  # poke psycopg2 to look at the socket
                 if select.select([conn], [], [], self.DEBOUNCE_TIMEOUT) == ([], [], []):
                     break
+            if not conn.notifies: continue
             events = set()
             while conn.notifies:
                 events.add(self.EVENTS[conn.notifies.pop().channel])
@@ -40,7 +41,7 @@ class Events:
             for e in events:
                 with self.event_queues_guard:
                     queues = self.event_queues.copy()
-                log.debug('sending to {} active event queues'.format(len(self.event_queues)))
+                log.debug('sending {} to {} active event queues'.format(e, len(self.event_queues)))
                 for q in queues:
                     try:
                         q.put_nowait(e)
@@ -68,7 +69,8 @@ class EventSource:
         self.events = Events(db, channels_map)
 
     def GET(self):
-        cherrypy.response.headers['Content-Type'] = 'text/event-stream'
+        cherrypy.response.headers['Content-Type']  = 'text/event-stream'
+        cherrypy.response.headers['Cache-Control'] = 'no-cache'
 
         def stream():
             yield '\n'  # push headers

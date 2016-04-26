@@ -9,7 +9,7 @@ CREATE TABLE controller (
     mac macaddr UNIQUE NOT NULL,
     key bytea   NOT NULL,
 
-    last_seen  timestamp,
+    last_seen  timestamptz,
     db_version integer,
     fw_version integer
 );
@@ -59,13 +59,12 @@ CREATE TABLE identity_expr_edge ( -- not normalized, but nice and simple constra
 
 -- this is cron, but with intervals instead of points: NULL matches everything, any non-NULL values
 -- are ANDed together
--- note: for simplicity, all times are localtime for now
 CREATE TABLE time_spec (
     id           serial PRIMARY KEY,
     name         text,
     weekday_mask bit(7), -- 0 is MONDAY!!!!!
-    time_from    time without time zone,
-    time_to      time without time zone,
+    time_from    time with time zone,
+    time_to      time with time zone,
     date_from    date,
     date_to      date,
 
@@ -91,9 +90,9 @@ CREATE TABLE rule (
 ----- AUXILIARY (ACCESS LOGS) ----------------------------------------------------------------------
 
 CREATE TABLE accesslog (
-    id            serial    PRIMARY KEY,
-    time          timestamp NOT NULL,
-    controller_id integer   NOT NULL REFERENCES controller,
-    card          bytea     NOT NULL,
-    allowed       boolean   NOT NULL
+    id            serial      PRIMARY KEY,
+    time          timestamptz NOT NULL,
+    controller_id integer     NOT NULL REFERENCES controller,
+    card          bytea       NOT NULL,
+    allowed       boolean     NOT NULL
 );

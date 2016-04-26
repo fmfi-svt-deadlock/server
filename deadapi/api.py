@@ -15,6 +15,7 @@ class Root:
         self.accesslog   = resources.AccessLog(db)
         self.events      = events.EventSource(db, {  # notify channel: event name
             'accesslog_change': 'accesslog_update',
+            'status_change':    'status_update',
         })
 
 cpconfig = {'/': {'request.dispatch': cherrypy.dispatch.MethodDispatcher()}}

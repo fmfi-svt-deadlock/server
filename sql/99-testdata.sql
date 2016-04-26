@@ -73,5 +73,5 @@ INSERT INTO rule (priority, aptype, time_spec, expr, rtype) VALUES (30, 1, 1, 4,
 INSERT INTO rule (priority, aptype, time_spec, expr, rtype) VALUES (10, 2, 2, 0, 'ALLOW');
 
 
-INSERT INTO accesslog (time, controller_id, card, allowed) VALUES (now(), 1, 'hello', true);
-INSERT INTO accesslog (time, controller_id, card, allowed) VALUES (now(), 2, 'world', false);
+INSERT INTO accesslog (time, controller_id, card, allowed) VALUES (current_timestamp, 1, 'hello', true);
+INSERT INTO accesslog (time, controller_id, card, allowed) VALUES (current_timestamp, 2, 'world', false);
