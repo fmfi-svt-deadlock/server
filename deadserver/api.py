@@ -15,17 +15,17 @@ from . import protocol
 log = logging.getLogger(__name__)
 
 def log_request(hdr, req):
-    log.info('->{type} from {id} [{nonce}]'.format(
+    log.info('<-{id} {type} [{nonce}]'.format(
         type=req.msg_type.name, id=protocol.show_id(hdr.controller_id),
         nonce=protocol.show_nonce(hdr.nonce)))
 
 def log_response(hdr, msg_type, status):
-    log.info('<-{type} {status} to {id} [{nonce}]'.format(
+    log.info('->{id} {type} {status} [{nonce}]'.format(
         type=msg_type.name, status=status.name, id=protocol.show_id(hdr.controller_id),
         nonce=protocol.show_nonce(hdr.nonce)))
 
 def log_bad_message(buf, e, maxlen):
-    log.error('->BAD MSG: {arg} -- buf: [size {size}] {buf}'.format(
+    log.error('BAD MSG: {arg} -- buf: [size {size}] {buf}'.format(
         arg=' '.join(e.args), size=len(buf),
         buf=base64.b64encode(buf[:maxlen]).decode('ascii')))
 
