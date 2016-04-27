@@ -16,13 +16,13 @@ CREATE TABLE controller (
 
 CREATE TABLE aptype (
     id   serial PRIMARY KEY,
-    name text   UNIQUE
+    name text   UNIQUE NOT NULL CHECK (name <> '')
 );
 
 CREATE TABLE accesspoint (
     id            serial  PRIMARY KEY,
     ip            inet    UNIQUE,
-    name          text    UNIQUE,
+    name          text    UNIQUE NOT NULL CHECK (name <> ''),
     type          integer REFERENCES aptype,
     controller_id integer UNIQUE REFERENCES controller
 );
@@ -40,8 +40,8 @@ CREATE TYPE expr_op AS ENUM ('INCLUDE', 'EXCLUDE');
 -- There is no "NOT" -- (INCLUDE a, EXCLUDE a, EXCLUDE b) is just ()
 
 CREATE TABLE identity_expr (
-    id   serial    PRIMARY KEY,
-    name text
+    id   serial PRIMARY KEY,
+    name text   UNIQUE NOT NULL CHECK (name <> '')
 );
 
 CREATE TABLE identity_expr_edge ( -- not normalized, but nice and simple constraints
@@ -61,7 +61,7 @@ CREATE TABLE identity_expr_edge ( -- not normalized, but nice and simple constra
 -- are ANDed together
 CREATE TABLE time_spec (
     id           serial PRIMARY KEY,
-    name         text,
+    name         text UNIQUE NOT NULL CHECK (name <> ''),
     weekday_mask bit(7), -- 0 is MONDAY!!!!!
     time_from    time with time zone,
     time_to      time with time zone,
@@ -74,15 +74,22 @@ CREATE TABLE time_spec (
                                   (date_from IS NULL     AND date_to IS NULL))
 );
 
-CREATE TYPE rule_t AS ENUM ('ALLOW', 'DENY');
+CREATE TYPE rule_kind AS ENUM ('ALLOW', 'DENY');
+
+CREATE TABLE ruleset (
+    id    serial      PRIMARY KEY,
+    name  text        UNIQUE NOT NULL CHECK (name <> ''),
+    mtime timestamptz DEFAULT current_timestamp
+);
 
 CREATE TABLE rule (
-    id        serial  PRIMARY KEY,
-    priority  integer NOT NULL, -- higher wins
-    aptype    integer NOT NULL REFERENCES aptype,
-    time_spec integer REFERENCES time_spec, -- if NULL, means UnknownTime
-    expr      integer NOT NULL REFERENCES identity_expr,
-    rtype     rule_t  NOT NULL,
+    id        serial    PRIMARY KEY,
+    ruleset   integer   NOT NULL REFERENCES ruleset,
+    priority  integer   NOT NULL, -- higher wins
+    aptype    integer   NOT NULL REFERENCES aptype,
+    time_spec integer   REFERENCES time_spec, -- if NULL, means UnknownTime
+    expr      integer   NOT NULL REFERENCES identity_expr,
+    rkind     rule_kind NOT NULL,
 
     UNIQUE    (aptype, priority)
 );

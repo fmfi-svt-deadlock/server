@@ -9,7 +9,7 @@ class Root:
     exposed = True
 
     def __init__(self, db):
-        self.accesslog   = resources.Ruleset(db)
+        self.ruleset     = resources.Ruleset(db)
         self.accesspoint = resources.AccessPoint(db)
         self.status      = resources.Status(db)
         self.accesslog   = resources.AccessLog(db)

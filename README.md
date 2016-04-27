@@ -43,6 +43,6 @@ Style Guide & such
 ------------------
 
 - [PEP-8](https://www.python.org/dev/peps/pep-0008/)
-  - linting with `pep8 --ignore=E221,E241,E302 --max-line-length=100`
+  - linting with `pep8 --ignore=E221,E241,E302,E701 --max-line-length=100`
 - `import this`
 - code and design reviews

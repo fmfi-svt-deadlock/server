@@ -9,5 +9,7 @@ class Formatter(logging.Formatter):
     - strips first name component from logger name, as it is redundant in both prod and devel config
     """
     def format(self, record):
-        record.name = record.name[record.name.find('.')+1:]
+        firstc = record.name.find('.')
+        if record.name[:firstc] in ('deadaux', 'deadapi', 'deadserver'):
+            record.name = record.name[firstc+1:]
         return super().format(record)

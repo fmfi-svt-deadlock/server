@@ -68,9 +68,12 @@ INSERT INTO time_spec (id, name, date_from, date_to) VALUES (1, 'prázdniny', 'J
 INSERT INTO time_spec (id, name) VALUES (2, 'always');
 ALTER SEQUENCE time_spec_id_seq RESTART WITH 256;
 
-INSERT INTO rule (priority, aptype, time_spec, expr, rtype) VALUES (10, 1, 0, 3, 'ALLOW');
-INSERT INTO rule (priority, aptype, time_spec, expr, rtype) VALUES (30, 1, 1, 4, 'ALLOW');
-INSERT INTO rule (priority, aptype, time_spec, expr, rtype) VALUES (10, 2, 2, 0, 'ALLOW');
+INSERT INTO ruleset (id, name) VALUES (1, 'ruleset1');
+ALTER SEQUENCE ruleset_id_seq RESTART WITH 256;
+
+INSERT INTO rule (ruleset, priority, aptype, time_spec, expr, rkind) VALUES (1, 10, 1, 0, 3, 'ALLOW');
+INSERT INTO rule (ruleset, priority, aptype, time_spec, expr, rkind) VALUES (1, 30, 1, 1, 4, 'ALLOW');
+INSERT INTO rule (ruleset, priority, aptype, time_spec, expr, rkind) VALUES (1, 10, 2, 2, 0, 'ALLOW');
 
 
 INSERT INTO accesslog (time, controller_id, card, allowed) VALUES (current_timestamp, 1, 'hello', true);

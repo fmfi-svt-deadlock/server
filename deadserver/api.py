@@ -25,7 +25,7 @@ def log_response(hdr, msg_type, status):
         nonce=protocol.show_nonce(hdr.nonce)))
 
 def log_bad_message(buf, e, maxlen):
-    log.error('BAD MSG: {arg} -- buf: [size {size}] {buf}'.format(
+    log.exception('BAD MSG: {arg} -- buf: [size {size}] {buf}'.format(
         arg=' '.join(e.args), size=len(buf),
         buf=base64.b64encode(buf[:maxlen]).decode('ascii')))
 

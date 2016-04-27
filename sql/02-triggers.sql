@@ -29,6 +29,9 @@ CREATE TRIGGER time_spec_change AFTER INSERT OR UPDATE OR DELETE OR TRUNCATE ON 
 CREATE TRIGGER rule_change AFTER INSERT OR UPDATE OR DELETE OR TRUNCATE ON rule
                EXECUTE PROCEDURE notify_trigger('rule_change');
 
+CREATE TRIGGER time_spec_change AFTER INSERT OR UPDATE OR DELETE OR TRUNCATE ON ruleset
+               EXECUTE PROCEDURE notify_trigger('rule_change');
+
 -- on controller or accesspoint change
 CREATE TRIGGER controller_change AFTER INSERT OR DELETE OR TRUNCATE ON controller
                EXECUTE PROCEDURE notify_trigger('controller_change');
