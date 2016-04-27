@@ -15,30 +15,18 @@ import records
 import config
 from common import cfiles
 from common import filetypes
+from common.utils.db import listen_for_notify
 from deadserver import protocol
 
 DEFAULT_NUM_THREADS = 8
 WAIT_BEFORE_REBUILD = 5  # seconds; wait for the DB to settle, to avoid useless rebuilds
 
 # TODO one day take specific actions depending on which one instead of rebuilding everything
-NOTIFY_CHANNELS = { 'identity_expr_change', 'rule_change', 'controller_change' }
+NOTIFY_CHANNELS = ['identity_expr_change', 'rule_change', 'controller_change']
 
 log = logging.getLogger(__name__)
 db  = records.Database(config.db_url); db.db.execution_options(isolation_level='AUTOCOMMIT')
 cf  = cfiles.ControllerFiles(config.controller_files_path)
-
-def listen_for_notify(channels, callback):
-    for ch in NOTIFY_CHANNELS: db.query('LISTEN {}'.format(ch))
-    conn = db.db.connection.connection  # too many wrappers
-    while True:
-        select.select([conn],[],[])  # wait until we've gotten something
-        # debounce
-        while True:
-            conn.poll()  # poke psycopg2 to look at the socket
-            if select.select([conn],[],[], WAIT_BEFORE_REBUILD) == ([],[],[]):  break  # timeout
-        log.info("NOTIFY received")
-        callback(conn.notifies)
-        conn.notifies.clear()
 
 def worker(q):
     while True:
@@ -50,13 +38,11 @@ def start(config):
     for _ in range(nthreads): threading.Thread(target=worker, args=[q]).start()
     log.info('{} worker threads created'.format(nthreads))
 
-    def rebuild(notifies):
+    def rebuild(notify):
         # TODO
-        while notifies: print(notifies.pop())
+        log.debug('would rebuild because of', notify)
 
-    listen_for_notify(NOTIFY_CHANNELS, rebuild)
-
-
+    listen_for_notify(db, NOTIFY_CHANNELS, rebuild, WAIT_BEFORE_REBUILD)
 
 # def create_db_for(mac):
 #     version = int(time.time())  # fits into uint64

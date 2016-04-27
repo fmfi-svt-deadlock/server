@@ -1,10 +1,13 @@
 import contextlib
 import logging
 import queue
-import select
 import threading
 
 import cherrypy
+
+from common.utils.db import listen_for_notify
+
+from .utils import header
 
 log = logging.getLogger(__name__)
 
@@ -19,47 +22,29 @@ class Events:
         self.event_queues_guard = threading.Lock()
         threading.Thread(target=self.listen, daemon=True).start()
 
-    # TODO the same as offlinedb -- refactor
-    def listen(self):
-        self.db.db.execution_options(isolation_level='AUTOCOMMIT')
-        for ch in self.EVENTS:
-            log.info('LISTEN {}'.format(ch))
-            self.db.query('LISTEN {}'.format(ch))
-        conn = self.db.db.connection.connection  # too many wrappers
-        while True:
-            select.select([conn], [], [])  # wait until we've gotten something
-            # debounce
-            while True:
-                conn.poll()  # poke psycopg2 to look at the socket
-                if select.select([conn], [], [], self.DEBOUNCE_TIMEOUT) == ([], [], []):
-                    break
-            if not conn.notifies: continue
-            events = set()
-            while conn.notifies:
-                events.add(self.EVENTS[conn.notifies.pop().channel])
-            log.info('NOTIFY received for {}'.format(', '.join(events)))
-            for e in events:
-                with self.event_queues_guard:
-                    queues = self.event_queues.copy()
-                log.debug('sending {} to {} active event queues'.format(e, len(self.event_queues)))
-                for q in queues:
-                    try:
-                        q.put_nowait(e)
-                    except queue.Full:
-                        with self.event_queues_guard:
-                            self.event_queues.discard(q)
-
     # TODO awful memory leak! for some reason cherrypy doesn't call close and therefore nobody
     # cleans up event_queues!!!
-    # for now workaround: small queue size, delete on full
+    # for now workaround: small queue size, delete on full in forward_notify
     @contextlib.contextmanager
     def get_queue(self):
         q = queue.Queue(maxsize=20)  # small size to avoid running out of memory on stale stuff
-        with self.event_queues_guard:
-            self.event_queues.add(q)
+        with self.event_queues_guard: self.event_queues.add(q)
         yield q
+        with self.event_queues_guard: self.event_queues.discard(q)
+
+    def forward_notify(self, notify):
+        e = self.EVENTS[notify.channel]
         with self.event_queues_guard:
-            self.event_queues.discard(q)
+            queues = self.event_queues.copy()
+        log.debug('sending {} to {} active event queues'.format(e, len(self.event_queues)))
+        for q in queues:
+            try:
+                q.put_nowait(e)
+            except queue.Full:
+                with self.event_queues_guard: self.event_queues.discard(q)
+
+    def listen(self):
+        listen_for_notify(self.db, self.EVENTS, self.forward_notify)
 
 class EventSource:
     exposed = True
@@ -68,11 +53,10 @@ class EventSource:
     def __init__(self, db, channels_map):
         self.events = Events(db, channels_map)
 
+    @header('Content-Type',      'text/event-stream')
+    @header('Cache-Control',     'no-cache')
+    @header('X-Accel-Buffering', 'no')  # tell proxies to not buffer this
     def GET(self):
-        cherrypy.response.headers['Content-Type']  = 'text/event-stream'
-        cherrypy.response.headers['Cache-Control'] = 'no-cache'
-        cherrypy.response.headers['X-Accel-Buffering'] = 'no'
-
         def stream():
             yield '\n'  # push headers
             with self.events.get_queue() as q:

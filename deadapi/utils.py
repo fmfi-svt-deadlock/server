@@ -1,7 +1,9 @@
 from datetime import datetime
+import functools
 import json
 
 import cherrypy
+import records
 
 def m(d1, d2):
     """Return a new dict merged from the given ones. Last wins."""
@@ -9,6 +11,14 @@ def m(d1, d2):
     r.update(d2)
     return r
 
+def header(key, value):
+    def decorator(f):
+        @functools.wraps(f)
+        def wrapped(*args, **kwargs):
+            cherrypy.response.headers[key] = value
+            return f(*args, **kwargs)
+        return wrapped
+    return decorator
 
 class _cpJSONEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -18,6 +28,8 @@ class _cpJSONEncoder(json.JSONEncoder):
             return obj.tobytes().decode(encoding='UTF-8')
         if isinstance(obj, (bytes, bytearray)):
             return obj.decode(encoding='UTF-8')
+        if isinstance(obj, records.Record):
+            return obj.as_dict()
         else:
             return super().default(obj)
 
