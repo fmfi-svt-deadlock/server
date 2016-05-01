@@ -17,9 +17,9 @@ ALOGrequest = struct('ALOGrequest', (types.Uint64, 'time'   ),
 @handles(MsgType.ALOG)
 @utils.unpack_indata_as(ALOGrequest)
 def handle(controller_id, data, api):
-    # TODO error handling :D
     api.db.query('INSERT INTO accesslog (time, controller_id, card, allowed) '
                  '    VALUES (:t, (SELECT id FROM controller WHERE mac = :ctrl), :card, :a)',
                  t=time.ctime(data.time.val), ctrl=show_id(controller_id), card=data.card_id.val,
                  a=bool(data.allowed.val))
+    # errors raise, so if I get here, it is in the DB
     return ResponseStatus.OK, None

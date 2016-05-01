@@ -20,11 +20,11 @@ CREATE TABLE aptype (
 );
 
 CREATE TABLE accesspoint (
-    id            serial  PRIMARY KEY,
-    ip            inet    UNIQUE,
-    name          text    UNIQUE NOT NULL CHECK (name <> ''),
-    type          integer REFERENCES aptype,
-    controller_id integer UNIQUE REFERENCES controller
+    id         serial  PRIMARY KEY,
+    ip         inet    UNIQUE,
+    name       text    UNIQUE NOT NULL CHECK (name <> ''),
+    type       integer REFERENCES aptype,
+    controller integer UNIQUE REFERENCES controller
 );
 
 CREATE TABLE identity (
@@ -44,21 +44,20 @@ CREATE TABLE identity_expr (
     name text   UNIQUE NOT NULL CHECK (name <> '')
 );
 
-CREATE TABLE identity_expr_edge ( -- not normalized, but nice and simple constraints
-    operation   expr_op NOT NULL,
-    parent      integer NOT NULL REFERENCES identity_expr,
-    child       integer REFERENCES identity_expr,
-    identity_id integer REFERENCES identity,
+CREATE TABLE identity_expr_edge ( -- not really normalized, but convenient, plus simple constraints
+    operation expr_op NOT NULL,
+    parent    integer NOT NULL REFERENCES identity_expr,
+    child     integer REFERENCES identity_expr,
+    identity  integer REFERENCES identity,
 
-    UNIQUE      (parent, child, identity_id),
-    CONSTRAINT  leaf_or_not_leaf CHECK (identity_id IS NOT NULL OR child IS NOT NULL),
-    CONSTRAINT  but_not_both     CHECK (identity_id IS NULL     OR child IS NULL)
+    UNIQUE     (parent, child, identity),
+    CONSTRAINT leaf_or_not_leaf CHECK (identity IS NOT NULL OR child IS NOT NULL),
+    CONSTRAINT but_not_both     CHECK (identity IS NULL     OR child IS NULL)
 );
 
 --- Rules ----
 
--- this is cron, but with intervals instead of points: NULL matches everything, any non-NULL values
--- are ANDed together
+-- this is cron (with intervals instead of points): NULL matches everything, stuff is ANDed together
 CREATE TABLE time_spec (
     id           serial PRIMARY KEY,
     name         text UNIQUE NOT NULL CHECK (name <> ''),
@@ -97,9 +96,9 @@ CREATE TABLE rule (
 ----- AUXILIARY (ACCESS LOGS) ----------------------------------------------------------------------
 
 CREATE TABLE accesslog (
-    id            serial      PRIMARY KEY,
-    time          timestamptz NOT NULL,
-    controller_id integer     NOT NULL REFERENCES controller,
-    card          bytea       NOT NULL,
-    allowed       boolean     NOT NULL
+    id         serial      PRIMARY KEY,
+    time       timestamptz NOT NULL,
+    controller integer     NOT NULL REFERENCES controller,
+    card       bytea       NOT NULL,
+    allowed    boolean     NOT NULL
 );

@@ -5,10 +5,10 @@ import json
 import cherrypy
 import records
 
-def m(d1, d2):
+def m(orig, *over):
     """Return a new dict merged from the given ones. Last wins."""
-    r = d1.copy()
-    r.update(d2)
+    r = orig.copy()
+    for d in over: r.update(d)
     return r
 
 def header(key, value):

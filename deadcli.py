@@ -48,9 +48,11 @@ def controller():
 def list_all():
     """List all controllers in the DB."""
     with opendb() as db:
-        rows = db.query('SELECT mac, ip, p.name AS ap, last_seen, db_version, fw_version '
-                        'FROM controller c LEFT OUTER JOIN accesspoint p ON p.controller_id = c.id '
-                        'ORDER BY mac')
+        rows = db.query('''
+            SELECT mac, ip, p.name AS ap, last_seen, db_version, fw_version
+            FROM controller c LEFT OUTER JOIN accesspoint p ON p.controller = c.id
+            ORDER BY mac
+            ''')
         click.echo(rows.dataset)
 
 @controller.command()
@@ -71,9 +73,11 @@ def add(mac):
 def writeconfig(mac, file):
     """Write controller configuration to file. This file must end up on the controller's SD card."""
     with opendb() as db:
-        rows = db.query('SELECT mac, ip, key '
-                        'FROM controller c LEFT OUTER JOIN accesspoint p ON c.id = p.controller_id '
-                        'WHERE mac = :mac', mac=mac).all()
+        rows = db.query('''
+            SELECT mac, ip, key
+            FROM controller c LEFT OUTER JOIN accesspoint p ON c.id = p.controller
+            WHERE mac = :mac
+            ''', mac=mac).all()
         # print(rows)
         if len(rows) != 1:
             die('Unknown controller MAC')
@@ -96,10 +100,12 @@ def accesspoint():
 def list_all():
     """List all accesspoints in the DB."""
     with opendb() as db:
-        rows = db.query('SELECT ip, p.name, t.name AS type, c.mac AS controller '
-                        'FROM accesspoint p LEFT OUTER JOIN aptype t ON p.type = t.id '
-                        '     LEFT OUTER JOIN controller c ON p.controller_id = c.id '
-                        'ORDER BY p.name')
+        rows = db.query('''
+            SELECT ip, p.name, t.name AS type, c.mac AS controller
+            FROM accesspoint p LEFT OUTER JOIN aptype t ON p.type = t.id
+                 LEFT OUTER JOIN controller c ON p.controller_id = c.id
+            ORDER BY p.name
+            ''')
         click.echo(rows.dataset)
 
 @accesspoint.command()
@@ -110,10 +116,14 @@ def add(ip, name, type):
     """Add an accesspoint to the DB."""
     with opendb() as db:
         try:
-            db.query('INSERT INTO aptype (name) SELECT :type '
-                     'WHERE (NOT EXISTS (SELECT name FROM aptype WHERE name = :type))', type=type)
-            db.query('INSERT INTO accesspoint (ip, name, type) VALUES (:ip, :name, '
-                     '    (SELECT id FROM aptype WHERE name = :type))', ip=ip, name=name, type=type)
+            db.query('''
+                INSERT INTO aptype (name) SELECT :type
+                WHERE (NOT EXISTS (SELECT name FROM aptype WHERE name = :type))
+                ''', type=type)
+            db.query('''
+                INSERT INTO accesspoint (ip, name, type)
+                VALUES (:ip, :name, (SELECT id FROM aptype WHERE name = :type))
+                ''', ip=ip, name=name, type=type)
         except sqlalchemy.exc.IntegrityError as e:
             die(e.args[0])
 
@@ -124,8 +134,10 @@ def attach(ip, mac):
     """Mark an accesspoint as controlled by the given controller."""
     with opendb() as db:
         try:
-            db.query('UPDATE accesspoint SET controller_id = '
-                     '(SELECT id FROM controller WHERE mac = :mac) WHERE ip = :ip', mac=mac, ip=ip)
+            db.query('''
+                UPDATE accesspoint
+                SET controller_id = (SELECT id FROM controller WHERE mac = :mac) WHERE ip = :ip
+                ''', mac=mac, ip=ip)
         except sqlalchemy.exc.IntegrityError as e:
             die(e.args[0])
 

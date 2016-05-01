@@ -13,9 +13,9 @@ INSERT INTO aptype (id, name) VALUES (1, 't1');
 INSERT INTO aptype (id, name) VALUES (2, 't2');
 ALTER SEQUENCE aptype_id_seq RESTART WITH 256;
 
-INSERT INTO accesspoint (id, name, ip, type, controller_id) VALUES (1, 'door1',  '10.0.1.1', 1, 1);
-INSERT INTO accesspoint (id, name, ip, type, controller_id) VALUES (2, 'door2',  '10.0.1.2', 1, 2);
-INSERT INTO accesspoint (id, name, ip, type, controller_id) VALUES (3, 'door3',  '10.0.1.3', 2, 3);
+INSERT INTO accesspoint (id, name, ip, type, controller) VALUES (1, 'door1',  '10.0.1.1', 1, 1);
+INSERT INTO accesspoint (id, name, ip, type, controller) VALUES (2, 'door2',  '10.0.1.2', 1, 2);
+INSERT INTO accesspoint (id, name, ip, type, controller) VALUES (3, 'door3',  '10.0.1.3', 2, 3);
 INSERT INTO accesspoint (id, name, ip, type)                VALUES (4, 'noctrl', '10.0.1.4', 2);
 INSERT INTO accesspoint (id, name, ip)                      VALUES (5, 'notype', '10.0.1.5');
 ALTER SEQUENCE accesspoint_id_seq RESTART WITH 256;
@@ -41,25 +41,25 @@ INSERT INTO identity (id, card) VALUES (3, 'test3');
 ALTER SEQUENCE identity_id_seq RESTART WITH 256;
 
 INSERT INTO identity_expr (id, name) VALUES (0, 'testX');
-INSERT INTO identity_expr_edge (parent, operation, identity_id) VALUES (0, 'INCLUDE', 1);
-INSERT INTO identity_expr_edge (parent, operation, identity_id) VALUES (0, 'INCLUDE', 2);
-INSERT INTO identity_expr_edge (parent, operation, identity_id) VALUES (0, 'INCLUDE', 3);
+INSERT INTO identity_expr_edge (parent, operation, identity) VALUES (0, 'INCLUDE', 1);
+INSERT INTO identity_expr_edge (parent, operation, identity) VALUES (0, 'INCLUDE', 2);
+INSERT INTO identity_expr_edge (parent, operation, identity) VALUES (0, 'INCLUDE', 3);
 
 
 INSERT INTO identity_expr (id, name) VALUES (1, 'tests or hello');
 INSERT INTO identity_expr_edge (parent, operation, child) VALUES (1, 'INCLUDE', 0);
-INSERT INTO identity_expr_edge (parent, operation, identity_id) VALUES (1, 'INCLUDE', 0);
+INSERT INTO identity_expr_edge (parent, operation, identity) VALUES (1, 'INCLUDE', 0);
 
 INSERT INTO identity_expr (id, name) VALUES (2, 'ugly');
-INSERT INTO identity_expr_edge (parent, operation, identity_id) VALUES (2, 'INCLUDE', 2);
-INSERT INTO identity_expr_edge (parent, operation, identity_id) VALUES (2, 'INCLUDE', 3);
+INSERT INTO identity_expr_edge (parent, operation, identity) VALUES (2, 'INCLUDE', 2);
+INSERT INTO identity_expr_edge (parent, operation, identity) VALUES (2, 'INCLUDE', 3);
 
 INSERT INTO identity_expr (id, name) VALUES (3, 'except ugly');
 INSERT INTO identity_expr_edge (parent, operation, child) VALUES (3, 'INCLUDE', 1);
 INSERT INTO identity_expr_edge (parent, operation, child) VALUES (3, 'EXCLUDE', 2);
 
 INSERT INTO identity_expr (id, name) VALUES (4, 'test1 only');
-INSERT INTO identity_expr_edge (parent, operation, identity_id) VALUES (4, 'INCLUDE', 1);
+INSERT INTO identity_expr_edge (parent, operation, identity) VALUES (4, 'INCLUDE', 1);
 
 ALTER SEQUENCE identity_expr_id_seq RESTART WITH 256;
 
@@ -78,5 +78,5 @@ INSERT INTO rule (ruleset, priority, aptype, time_spec, expr, rkind) VALUES (1, 
 INSERT INTO rule (ruleset, priority, aptype, time_spec, expr, rkind) VALUES (1, 47, 1, 3, 3, 'ALLOW');
 
 
-INSERT INTO accesslog (time, controller_id, card, allowed) VALUES (current_timestamp, 1, 'hello', true);
-INSERT INTO accesslog (time, controller_id, card, allowed) VALUES (current_timestamp, 2, 'world', false);
+INSERT INTO accesslog (time, controller, card, allowed) VALUES (current_timestamp, 1, 'hello', true);
+INSERT INTO accesslog (time, controller, card, allowed) VALUES (current_timestamp, 2, 'world', false);

@@ -42,5 +42,6 @@ CREATE TRIGGER controller_update AFTER UPDATE ON controller FOR EACH ROW
 CREATE TRIGGER accesspoint_change AFTER INSERT OR DELETE OR TRUNCATE ON accesspoint
                EXECUTE PROCEDURE notify_trigger('controller_change');
 CREATE TRIGGER accesspoint_update AFTER UPDATE ON accesspoint FOR EACH ROW
-               WHEN ((OLD.ip, OLD.type, OLD.controller_id) IS DISTINCT FROM (NEW.ip, NEW.type, NEW.controller_id))
+               WHEN ((OLD.ip, OLD.type, OLD.controller) IS DISTINCT FROM
+                     (NEW.ip, NEW.type, NEW.controller))
                EXECUTE PROCEDURE notify_trigger('controller_change');
