@@ -66,6 +66,7 @@ ALTER SEQUENCE identity_expr_id_seq RESTART WITH 256;
 INSERT INTO time_spec (id, name, weekday_mask, time_from, time_to) VALUES (0, 'pracovný deň', B'1111100', '07:00', '20:00');
 INSERT INTO time_spec (id, name, date_from, date_to) VALUES (1, 'prázdniny', 'July 1, 2016', 'September 2, 2016');
 INSERT INTO time_spec (id, name) VALUES (2, 'always');
+INSERT INTO time_spec (id, name, time_from, time_to) VALUES (3, 'príjemný podvečer', '22:00', '23:59:59');
 ALTER SEQUENCE time_spec_id_seq RESTART WITH 256;
 
 INSERT INTO ruleset (id, name) VALUES (1, 'ruleset1');
@@ -74,6 +75,7 @@ ALTER SEQUENCE ruleset_id_seq RESTART WITH 256;
 INSERT INTO rule (ruleset, priority, aptype, time_spec, expr, rkind) VALUES (1, 10, 1, 0, 3, 'ALLOW');
 INSERT INTO rule (ruleset, priority, aptype, time_spec, expr, rkind) VALUES (1, 30, 1, 1, 4, 'ALLOW');
 INSERT INTO rule (ruleset, priority, aptype, time_spec, expr, rkind) VALUES (1, 10, 2, 2, 0, 'ALLOW');
+INSERT INTO rule (ruleset, priority, aptype, time_spec, expr, rkind) VALUES (1, 47, 1, 3, 3, 'ALLOW');
 
 
 INSERT INTO accesslog (time, controller_id, card, allowed) VALUES (current_timestamp, 1, 'hello', true);

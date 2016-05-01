@@ -62,9 +62,9 @@ CREATE TABLE identity_expr_edge ( -- not normalized, but nice and simple constra
 CREATE TABLE time_spec (
     id           serial PRIMARY KEY,
     name         text UNIQUE NOT NULL CHECK (name <> ''),
-    weekday_mask bit(7), -- 0 is MONDAY!!!!!
     time_from    time with time zone,
     time_to      time with time zone,
+    weekday_mask bit(7), -- 0 is MONDAY!!!!!
     date_from    date,
     date_to      date,
 

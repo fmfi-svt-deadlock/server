@@ -28,7 +28,7 @@ class MsgType(types.Uint8, enum.Enum):
     PING     = 0x01
     XFER     = 0x02
     ALOG     = 0x04
-    OPEN     = 0x10
+    ASK      = 0x10
     ECHOTEST = 0xee
 
 class ResponseStatus(types.Uint8, enum.Enum):

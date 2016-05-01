@@ -5,6 +5,9 @@ import cherrypy
 from . import events
 from . import resources
 
+# Note: the ruleset semantics means atomic flipping of rulesets is guaranteed, but nothing else
+# flips atomically. That looks kinda OK-ish to me, but... Should it?
+
 class Root:
     exposed = True
 
