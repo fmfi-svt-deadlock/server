@@ -50,7 +50,7 @@ def _tobytes(x):
     return bytes(x)
 
 
-class _Uint(_SimpleType):
+class _Int(_SimpleType):
     @classmethod
     def _sz(cls): return struct.calcsize(cls._fmt)
 
@@ -58,17 +58,23 @@ class _Uint(_SimpleType):
     def _unpack_from(cls, buf):
         return struct.unpack(ENDIANITY+cls._fmt, buf[:cls._sz()])[0], buf[cls._sz():]
 
+    def _pack(self):
+        return struct.pack(ENDIANITY+self._fmt, self.val)
+
+class _Uint(_Int):
     def _validate(self, x):
         t = 256**self._sz()
         if not 0 <= x < t: raise ValueError('{} is not a {}-byte uint'.format(x, self._sz()))
-
-    def _pack(self):
-        return struct.pack(ENDIANITY+self._fmt, self.val)
 
 class Uint8(_Uint):  _fmt = 'B'
 class Uint16(_Uint): _fmt = 'H'
 class Uint32(_Uint): _fmt = 'I'
 class Uint64(_Uint): _fmt = 'Q'
+
+# TODO this won't be necessary when CBOR is used -- delete it
+# (that's why I'm skipping validation :D)
+class Int64(_Int): _fmt = 'q'
+
 
 class _BytesLike(_SimpleType):
     def __init__(self, arg):

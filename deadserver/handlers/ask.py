@@ -1,4 +1,4 @@
-"""Handler for ASK requests: should I open the door now?"""
+"""Handler for ASK requests: should I allow access now?"""
 
 from datetime import datetime, timezone
 
@@ -11,10 +11,11 @@ from . import utils
 
 CardId = types.PascalStr(12)
 
-ASKrequest = struct('ASKrequest', (CardId, 'card_id'))
+ASKrequest  = struct('ASKrequest',  (CardId, 'card_id'))
+ASKresponse = struct('ASKresponse', (Uint8,  'allow'))
 
-YES = (ResponseStatus.OK, None)
-NO = (ResponseStatus.ERR, None)
+YES = (ResponseStatus.OK, ASKresponse(1))
+NO  = (ResponseStatus.OK, ASKresponse(0))
 
 @handles(MsgType.ASK)
 @utils.unpack_indata_as(ASKrequest)

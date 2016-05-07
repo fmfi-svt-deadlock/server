@@ -15,12 +15,12 @@ from . import protocol
 log = logging.getLogger(__name__)
 
 def log_request(hdr, req):
-    log.info('<-{id} {type} [{nonce}]'.format(
+    log.info('<-{id} [{nonce}] {type}'.format(
         type=req.msg_type.name, id=protocol.show_id(hdr.controller_id),
         nonce=protocol.show_nonce(hdr.nonce)))
 
 def log_response(hdr, msg_type, status):
-    log.info('->{id} {type} {status} [{nonce}]'.format(
+    log.info('->{id} [{nonce}] {type} {status}'.format(
         type=msg_type.name, status=status.name, id=protocol.show_id(hdr.controller_id),
         nonce=protocol.show_nonce(hdr.nonce)))
 
@@ -35,7 +35,7 @@ class API:
         self.config = config
         self.db     = db
         self.cfiles = cfiles.ControllerFiles(self.config.controller_files_path)
-        self.allowed_msg_types = { protocol.MsgType[x] for x in config.allowed_msg_types }
+        self.allowed_msg_types = {protocol.MsgType[x] for x in config.allowed_msg_types}
 
     def handle_packet(self, in_buf):
         try:

@@ -32,16 +32,10 @@ CREATE TRIGGER rule_change AFTER INSERT OR UPDATE OR DELETE OR TRUNCATE ON rule
 CREATE TRIGGER time_spec_change AFTER INSERT OR UPDATE OR DELETE OR TRUNCATE ON ruleset
                EXECUTE PROCEDURE notify_trigger('rule_change');
 
--- on controller or accesspoint change
-CREATE TRIGGER controller_change AFTER INSERT OR DELETE OR TRUNCATE ON controller
-               EXECUTE PROCEDURE notify_trigger('controller_change');
-CREATE TRIGGER controller_update AFTER UPDATE ON controller FOR EACH ROW
-               WHEN (OLD.mac IS DISTINCT FROM NEW.mac)
-               EXECUTE PROCEDURE notify_trigger('controller_change');
-
+-- on controller change
 CREATE TRIGGER accesspoint_change AFTER INSERT OR DELETE OR TRUNCATE ON accesspoint
                EXECUTE PROCEDURE notify_trigger('controller_change');
 CREATE TRIGGER accesspoint_update AFTER UPDATE ON accesspoint FOR EACH ROW
-               WHEN ((OLD.ip, OLD.type, OLD.controller) IS DISTINCT FROM
-                     (NEW.ip, NEW.type, NEW.controller))
+               WHEN ((OLD.type, OLD.controller) IS DISTINCT FROM
+                     (NEW.type, NEW.controller))
                EXECUTE PROCEDURE notify_trigger('controller_change');

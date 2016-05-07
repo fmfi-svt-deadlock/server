@@ -1,4 +1,4 @@
-"""Handlers for PING and XFER requests: transfer a file chunk"""
+"""Handler for XFER requests: transfer a file chunk"""
 
 from .defs import handles
 from . import utils
@@ -12,11 +12,11 @@ from ..protocol import MsgType, ResponseStatus
 Request = struct('Request',
                  (filetypes.FileType, 'type'   ),
                  (types.Uint32,       'version'),
-                 (types.Uint16,       'offset' ),
-                 (types.Uint16,       'length' ))
+                 (types.Uint32,       'offset' ),
+                 (types.Uint32,       'length' ))
 
 Response = struct('Response',
-                  (types.Uint16, 'length'),
+                  (types.Uint32, 'length'),
                   (types.Tail,   'chunk' ))
 
 @handles(MsgType.XFER)

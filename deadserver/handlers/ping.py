@@ -12,7 +12,7 @@ from .defs import handles
 from . import utils
 
 Ping = struct('Ping',
-              (types.Uint64, 'time'      ),
+              (types.Int64,  'time'      ),
               (types.Uint32, 'db_version'),
               (types.Uint32, 'fw_version'))
 

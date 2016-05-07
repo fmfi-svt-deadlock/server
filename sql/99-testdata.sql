@@ -13,11 +13,11 @@ INSERT INTO aptype (id, name) VALUES (1, 't1');
 INSERT INTO aptype (id, name) VALUES (2, 't2');
 ALTER SEQUENCE aptype_id_seq RESTART WITH 256;
 
-INSERT INTO accesspoint (id, name, ip, type, controller) VALUES (1, 'door1',  '10.0.1.1', 1, 1);
-INSERT INTO accesspoint (id, name, ip, type, controller) VALUES (2, 'door2',  '10.0.1.2', 1, 2);
-INSERT INTO accesspoint (id, name, ip, type, controller) VALUES (3, 'door3',  '10.0.1.3', 2, 3);
-INSERT INTO accesspoint (id, name, ip, type)                VALUES (4, 'noctrl', '10.0.1.4', 2);
-INSERT INTO accesspoint (id, name, ip)                      VALUES (5, 'notype', '10.0.1.5');
+INSERT INTO accesspoint (id, name, type, controller) VALUES (1, 'door1', 1, 1);
+INSERT INTO accesspoint (id, name, type, controller) VALUES (2, 'door2', 1, 2);
+INSERT INTO accesspoint (id, name, type, controller) VALUES (3, 'door3', 2, 3);
+INSERT INTO accesspoint (id, name, type)             VALUES (4, 'noctrl', 2);
+INSERT INTO accesspoint (id, name)                   VALUES (5, 'notype');
 ALTER SEQUENCE accesspoint_id_seq RESTART WITH 256;
 
 -- Encode the following:

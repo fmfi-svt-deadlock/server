@@ -2,12 +2,12 @@
 
 -- Note: Don't forget to update WHEN clauses in `02-triggers.sql` when changing scheme!
 
------ BASIC DATA -----------------------------------------------------------------------------------
+----- CONTROLLERS, ACCESSPOINTS, IDENTITIES --------------------------------------------------------
 
 CREATE TABLE controller (
     id  serial  PRIMARY KEY,
-    mac macaddr UNIQUE NOT NULL,
     key bytea   NOT NULL,
+    mac macaddr UNIQUE NOT NULL,
 
     last_seen  timestamptz,
     db_version integer,
@@ -16,20 +16,19 @@ CREATE TABLE controller (
 
 CREATE TABLE aptype (
     id   serial PRIMARY KEY,
-    name text   UNIQUE NOT NULL CHECK (name <> '')
+    name text   UNIQUE CHECK (name <> '')
 );
 
 CREATE TABLE accesspoint (
     id         serial  PRIMARY KEY,
-    ip         inet    UNIQUE,
-    name       text    UNIQUE NOT NULL CHECK (name <> ''),
+    name       text    UNIQUE CHECK (name <> ''),
     type       integer REFERENCES aptype,
     controller integer UNIQUE REFERENCES controller
 );
 
 CREATE TABLE identity (
     id   serial PRIMARY KEY,
-    card bytea  NOT NULL
+    card bytea  UNIQUE NOT NULL
 );
 
 ----- RULES ----------------------------------------------------------------------------------------
@@ -41,7 +40,7 @@ CREATE TYPE expr_op AS ENUM ('INCLUDE', 'EXCLUDE');
 
 CREATE TABLE identity_expr (
     id   serial PRIMARY KEY,
-    name text   UNIQUE NOT NULL CHECK (name <> '')
+    name text   UNIQUE CHECK (name <> '')
 );
 
 CREATE TABLE identity_expr_edge ( -- not really normalized, but convenient, plus simple constraints
@@ -60,7 +59,7 @@ CREATE TABLE identity_expr_edge ( -- not really normalized, but convenient, plus
 -- this is cron (with intervals instead of points): NULL matches everything, stuff is ANDed together
 CREATE TABLE time_spec (
     id           serial PRIMARY KEY,
-    name         text UNIQUE NOT NULL CHECK (name <> ''),
+    name         text UNIQUE CHECK (name <> ''),
     time_from    time with time zone,
     time_to      time with time zone,
     weekday_mask bit(7), -- 0 is MONDAY!!!!!
@@ -77,7 +76,7 @@ CREATE TYPE rule_kind AS ENUM ('ALLOW', 'DENY');
 
 CREATE TABLE ruleset (
     id    serial      PRIMARY KEY,
-    name  text        UNIQUE NOT NULL CHECK (name <> ''),
+    name  text        UNIQUE CHECK (name <> ''),
     mtime timestamptz DEFAULT current_timestamp
 );
 
@@ -100,5 +99,7 @@ CREATE TABLE accesslog (
     time       timestamptz NOT NULL,
     controller integer     NOT NULL REFERENCES controller,
     card       bytea       NOT NULL,
-    allowed    boolean     NOT NULL
+    allowed    boolean     NOT NULL,
+
+    CONSTRAINT record_unique UNIQUE (time, controller, card, allowed)
 );

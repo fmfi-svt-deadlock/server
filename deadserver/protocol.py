@@ -4,10 +4,11 @@ This knows the data format for the various structures in the protocol. See
 `api` for the behavior / business logic.
 """
 
-# TODO: consider [CBOR](http://cbor.io/).
-# TODO: With the faster processor, we probably can afford assymetric crypto. Switch if possible.
-# TODO: separate the 2 layers of the protocol
+# TODO: rewrite to use [CBOR](http://cbor.io/).
+# TODO: separate the 2 layers of the protocol!!!
 # TODO: ... and then blackboxes instead of secret keys
+# TODO: With the faster processor, we probably can afford assymetric crypto. Measure and switch if
+#       possible.
 
 import binascii
 

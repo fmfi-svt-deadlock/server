@@ -34,7 +34,10 @@ Development Quick-Start
 Next to do:
 -----------
 
-- on request arrival check if client IP matches the one in DB for this ID
+- fix DB: use psycopg directly, maybe with a simple named args wrapper if it can be made simple
+  + then commit explicitly (on cursor.close / contextmanager)
+- complete the switch to numerical controller IDs; derive MAC from ID by default
+  + known unfinished bits: protocol, get_key, cli
 - HTTP API
 - tests
 - CI
@@ -45,4 +48,4 @@ Style Guide & such
 - [PEP-8](https://www.python.org/dev/peps/pep-0008/)
   - linting with `pep8 --ignore=E221,E241,E302,E701 --max-line-length=100`
 - `import this`
-- code and design reviews
+- design and code reviews

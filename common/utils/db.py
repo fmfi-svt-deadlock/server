@@ -42,7 +42,7 @@ log = logging.getLogger(__name__)
 #         self._needs_commit = False
 
 
-Notify = collections.namedtuple('Notify', ['channel', 'callback'])
+Notify = collections.namedtuple('Notify', ['channel', 'payload'])
 
 def listen_for_notify(db, channels, callback, debounce_timeout=1):
     """Listen for Postgres's NOTIFY, debouncing/deduplicating notifications.

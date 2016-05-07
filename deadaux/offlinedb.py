@@ -40,7 +40,7 @@ def start(config):
 
     def rebuild(notify):
         # TODO
-        log.debug('would rebuild because of', notify)
+        log.debug('would rebuild because of {}'.format(notify))
 
     listen_for_notify(db, NOTIFY_CHANNELS, rebuild, WAIT_BEFORE_REBUILD)
 
