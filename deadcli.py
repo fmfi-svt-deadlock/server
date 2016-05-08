@@ -16,6 +16,10 @@ import sqlalchemy.exc
 
 import config
 
+from common.utils import conversions
+from common.utils import record
+from common import deadlock_tags as T
+
 class myconfig:
     initdb_files = [os.path.join(os.path.dirname(__file__), f) for f in [
                     'sql/00-schema.sql',
@@ -66,28 +70,36 @@ def add(mac):
         except sqlalchemy.exc.IntegrityError as e:
             die(e.args[0])
 
+# TODO extra key:value things, one day, possibly?
+@controller.command()
+@click.argument('id', type=int)
+@click.argument('file', type=click.File('wb'))
+def writeconfig(id, file):
+    """Write controller configuration to file.
+
+    This file must end up on the controller's SD card."""
+    with opendb() as db:
+        rows = db.query('SELECT mac, key FROM controller c WHERE id = :id', id=id).all()
+        if len(rows) != 1: die('Unknown controller ID')
+        r = rows[0]
+        if r.mac and r.key:
+            conf = {T.CONFIG_ID: id, T.CONFIG_MAC: r.mac, T.CONFIG_KEY: '[not shown]'}
+            click.echo(record.show(conf), nl=False)
+            conf[T.CONFIG_MAC] = conversions.mac2bytes(r.mac)
+            conf[T.CONFIG_KEY] = record.coerce_item(r.key)
+            file.write(record.dump(conf))
+        else:
+            die('Required config params mac and key not in DB, giving up.')
 
 @controller.command()
-@click.argument('mac')
-@click.argument('file', type=click.File('w'))
-def writeconfig(mac, file):
-    """Write controller configuration to file. This file must end up on the controller's SD card."""
-    with opendb() as db:
-        rows = db.query('''
-            SELECT mac, ip, key
-            FROM controller c LEFT OUTER JOIN accesspoint p ON c.id = p.controller
-            WHERE mac = :mac
-            ''', mac=mac).all()
-        # print(rows)
-        if len(rows) != 1:
-            die('Unknown controller MAC')
-        r = rows[0]
-        click.echo('mac = {}, ip = {}'.format(r.mac, r.ip))
-        if r.mac and r.ip and r.key:
-            file.write('{}\n{}\n{}\n'.format(
-                r.mac, r.ip, binascii.hexlify(bytes(r.key)).decode('utf-8')))
-        else:
-            die('Config incomplete, giving up.')
+@click.argument('file', type=click.File('rb'))
+def readconfig(file):
+    """Print controller configuration in file."""
+    conf = record.load(file.read())
+    for hidden in (T.CONFIG_KEY, T.CONFIG_PRIVKEY):
+        if hidden in conf: conf[hidden] = '[not shown]'
+    if conf[T.CONFIG_MAC]: conf[T.CONFIG_MAC] = conversions.bytes2mac(conf[T.CONFIG_MAC])
+    click.echo(record.show(conf), nl=False)
 
 ### ACCESSPOINT COMMANDS ###########################################################################
 

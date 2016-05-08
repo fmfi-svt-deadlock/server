@@ -20,12 +20,12 @@ def ask(db, accesspoint, when, identity):
         FROM rule r
              JOIN accesspoint p ON p.type = r.aptype
              JOIN time_spec t ON r.time_spec = t.id
-             JOIN in_expr e ON r.expr = e.expr_id
+             JOIN in_expr e ON r.expr = e.expr
         WHERE p.id = :accesspoint
               AND (t.time_from IS NULL OR (t.time_from <= :time AND :time <= t.time_to))
               AND (t.date_from IS NULL OR (t.date_from <= :date AND :date <= t.date_to))
               AND (t.weekday_mask IS NULL OR (get_bit(t.weekday_mask, :weekday) = 1))
-              AND e.identity_id = :identity
+              AND e.identity = :identity
         ORDER BY r.priority DESC LIMIT 1
         ''',
         accesspoint=accesspoint, date=when.date(), time=when.time(), weekday=when.weekday(),

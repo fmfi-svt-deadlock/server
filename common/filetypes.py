@@ -3,11 +3,11 @@
 import enum
 import re
 
-import structparse
+from common import deadlock_tags as T
 
-class FileType(structparse.types.Uint8, enum.Enum):
-    DB = 1
-    FW = 2
+class FileType(enum.Enum):
+    DB = T.FILETYPE_DB
+    FW = T.FILETYPE_FW
 
 def filename(ftype, version):
     return '{}_{:010d}.bin'.format(ftype.name, version)

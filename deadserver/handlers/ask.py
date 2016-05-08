@@ -5,29 +5,27 @@ from datetime import datetime, timezone
 from common import rules
 from structparse import struct, types
 
+from common.utils.cbor import deadlock_tags as T
+
 from ..protocol import MsgType, ResponseStatus, show_id
 from .defs import handles
 from . import utils
 
-CardId = types.PascalStr(12)
-
-ASKrequest  = struct('ASKrequest',  (CardId, 'card_id'))
-ASKresponse = struct('ASKresponse', (Uint8,  'allow'))
-
-YES = (ResponseStatus.OK, ASKresponse(1))
-NO  = (ResponseStatus.OK, ASKresponse(0))
-
 @handles(MsgType.ASK)
-@utils.unpack_indata_as(ASKrequest)
+@utils.deserialize_in
+@utils.serialize_out
 def handle(controller, data, api):
     accesspoint_r = api.db.query(
-        'SELECT p.id FROM accesspoint p JOIN controller c ON p.controller_id = c.id'
+        'SELECT p.id FROM accesspoint p JOIN controller c ON p.controller = c.id'
         ' WHERE c.mac = :ctrl', ctrl=show_id(controller)).all()
     if not accesspoint_r:
         raise ValueError('no associated accesspoint for controller {}'.format(show_id(controller)))
     accesspoint = accesspoint_r[0][0]
-    identity_r = api.db.query('SELECT id FROM identity WHERE card = :c', c=data.card_id.val).all()
+    identity_r = api.db.query('SELECT id FROM identity WHERE card = :c', c=data[T.CARD_ID]).all()
     if not identity_r: return NO
     identity = identity_r[0][0]
     print(accesspoint, identity)
-    return YES if rules.ask(api.db, accesspoint, datetime.now(timezone.utc), identity) else NO
+    return {
+        T.STATUS: ResponseStatus.OK,
+        T.ALLOW: rules.ask(api.db, accesspoint, datetime.now(timezone.utc), identity),
+    }

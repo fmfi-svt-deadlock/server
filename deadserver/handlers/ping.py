@@ -17,8 +17,8 @@ Ping = struct('Ping',
               (types.Uint32, 'fw_version'))
 
 @handles(MsgType.PING)
-@utils.unpack_indata_as(Ping)
-@utils.pack_outdata
+@utils.deserialize_in
+@utils.serialize_out
 def handle(controller_id, req, api):
     api.db.query("UPDATE controller SET last_seen = :t, db_version = :db, fw_version = :fw WHERE mac = :id",
                  id=protocol.show_id(controller_id), t=datetime.now(),

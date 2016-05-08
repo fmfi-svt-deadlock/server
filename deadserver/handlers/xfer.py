@@ -20,8 +20,8 @@ Response = struct('Response',
                   (types.Tail,   'chunk' ))
 
 @handles(MsgType.XFER)
-@utils.unpack_indata_as(Request)
-@utils.pack_outdata
+@utils.deserialize_in
+@utils.serialize_out
 def handle(controller_id, req, api):
     filename = filetypes.filename(type=req.type, version=req.version.val)
     try:

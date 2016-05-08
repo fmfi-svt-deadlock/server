@@ -17,7 +17,7 @@ ALOGrequest = struct('ALOGrequest', (types.Uint64, 'time'   ),
                                     (types.Uint8,  'allowed'))
 
 @handles(MsgType.ALOG)
-@utils.unpack_indata_as(ALOGrequest)
+@utils.deserialize_in
 def handle(controller_id, data, api):
     """Handles the ALOG message.
 
