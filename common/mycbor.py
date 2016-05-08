@@ -87,35 +87,30 @@ class Pretty:
             return item
         return tr(yaml.load(buf))
 
-class Record(dict):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for tag in self:
-            if not isinstance(tag, int):
-                raise TypeError("{} is not an integer tag".format(type(tag)))
-
-    def __repr__(self):
-        items = ['{}: {}'.format(k, v) for k, v in self.items()]
-        return 'Record<{}>'.format(', '.join(items))
-
-    @staticmethod
-    def to_cbor(rec):
-        return [Tag(k, tagmapper.encode(v)) for k, v in rec.items()]  # WTF, something somewhere...
-
-    @classmethod
-    def from_cbor(cls, obj):
-        rec = {}
-        for t in obj:
-            if t.tag in rec: raise ValueError('Tag {} present more than once'.format(t.tag))
-            rec[t.tag] = t.value
-        return cls(rec)
-
-
 def record_with_tags(tags, ident):
     """Returns a Record aware of the given tags namespace.
 
     Can be initialized with string tag names, and provides rec.TAG_NAME attribute access.
     """
+    class Record:
+        def __init__(self, *args, **kwargs):
+            self._dict = dict(*args, **kwargs)
+            for tag in self._dict:
+                if not isinstance(tag, int):
+                    raise TypeError("{} is not an integer tag".format(type(tag)))
+
+        @staticmethod
+        def to_cbor(rec):
+            return [Tag(k, tagmapper.encode(v)) for k, v in rec._dict.items()]
+
+        @classmethod
+        def from_cbor(cls, obj):
+            rec = {}
+            for t in obj:
+                if t.tag in rec: raise ValueError('Tag {} present more than once'.format(t.tag))
+                rec[t.tag] = tagmapper.decode(t.value)
+            return cls(rec)
+
     pretty = Pretty(tags)
 
     class RecordWithTags(Record, yaml.YAMLObject):
@@ -124,21 +119,24 @@ def record_with_tags(tags, ident):
                 if isinstance(item, dict):
                     return {pretty.find_tag_value(k): tr(v) for k, v in item.items()}
                 return item
-                print('kalerab', tr(dict(*args, **kwargs)))
             super().__init__(tr(dict(*args, **kwargs)))
 
         def __getattr__(self, attr):
+            if attr not in pretty.tags_dict: raise AttributeError(attr)
+            print('in __getattr__, for', attr)
             tag = pretty.find_tag_value(attr)
-            if tag not in self:
+            if tag not in self._dict:
                 raise ValueError('Required field {} not present in {}'.format(tag, self))
-            return self[tag]
+            return self._dict[tag]
 
         def __setattr__(self, attr, value):
+            if attr not in pretty.tags_dict: return super().__setattr__(attr, value)
+            print('in __setattr__, for', attr)
             tag = pretty.find_tag_value(attr)
-            self[tag] = value
+            self._dict[tag] = value
 
         def __repr__(self):
-            items = ['{}: {}'.format(pretty.find_tag_name(k), v) for k, v in self.items()]
+            items = ['{}: {}'.format(pretty.find_tag_name(k), v) for k, v in self._dict.items()]
             return '{}<{}>'.format(self.__class__.__name__, ', '.join(items))
 
         # @staticmethod
@@ -181,7 +179,7 @@ class IPaddr(yaml.YAMLObject):
 
 tagmapper = cbor.tagmap.TagMapper([
     cbor.tagmap.ClassTag(mytags.TYPE_RECORD, RecordDL, RecordDL.to_cbor, RecordDL.from_cbor),
-    cbor.tagmap.ClassTag(mytags.TYPE_IPADDR, IPaddr,   IPaddr.to_cbor,   IPaddr.from_cbor),
+    # cbor.tagmap.ClassTag(mytags.TYPE_IPADDR, IPaddr,   IPaddr.to_cbor,   IPaddr.from_cbor),
 ])
 
 # for easier access

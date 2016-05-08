@@ -3,8 +3,6 @@
 # All should start with 0xDE (unassigned according to
 # http://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml)
 
-DUMMY = 0xDEFF
-
 ### types ##########################################################################################
 
 TYPE_RECORD  = 0xDE01
@@ -22,9 +20,10 @@ RESPONSE_OK        = 0xDE42  # the answer...
 RESPONSE_ERR       = 0xDE45
 RESPONSE_TRY_AGAIN = 0xDE47
 
-FILE_TYPE = 0xDE61
-CARD_ID   = 0xDE91
-ALLOW     = 0xDE92
+TIME     = 0xDE51
+FILETYPE = 0xDE61
+CARD_ID  = 0xDE91
+ALLOWED  = 0xDE92
 
 CONTROLLER = 0xDEAA
 NONCE      = 0xDEAB
@@ -48,3 +47,7 @@ CONFIG_IP          = 0xDECB
 CONFIG_ROUTE       = 0xDECC
 CONFIG_SERVERS     = 0xDECD  # array of IP addresses
 CONFIG_SERVER_PORT = 0xDECE
+
+### other ##########################################################################################
+
+DUMMY = 0xDEFF

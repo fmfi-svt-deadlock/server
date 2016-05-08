@@ -27,6 +27,14 @@ class DumbController:
     def request(self, msg_type, data):
         """This does not check anything in the response, as it is dumb (on purpose)."""
         req_buf = wirefmt.write_request(msg_type, data)
+
+
+
+        import binascii
+        print('req_buf:', binascii.hexlify(req_buf))
+
+
+
         out_buf = wirefmt.close_envelope(wirefmt.new_envelope(self.id), req_buf, self.crypto_box)
         in_buf = self._send(out_buf)
         re_envelope, response_buf = wirefmt.open_envelope(in_buf, self.crypto_box)
@@ -42,9 +50,6 @@ class DumbController:
         return sock.recv(64000)
 
 if __name__ == '__main__':
-    print(mycbor.dump(mycbor.RecordDL(DUMMY=mycbor.IPaddr('127.0.0.1'))))
-
-
     cid, msg_type = int(sys.argv[1]), sys.argv[2]
     try:
         msg_type = MsgType[msg_type.upper()]
