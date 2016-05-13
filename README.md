@@ -1,5 +1,3 @@
-**Note: This README is out of date. TODO.**
-
 server: the DB + "manager"
 ==========================
 
