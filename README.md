@@ -11,11 +11,12 @@ Deployment TL;DR
 
 1. virtualenv with Python 3.4 or 3.5
 2. `pip install -r requirements.txt`
-3. `cp config.py{.example,}; $EDITOR config.py`
+3. `cp config/local.py{.example,}; $EDITOR config/local.py`
 4. `./deadcli newdb --yes`
 5. run what you want with `./run*.py` or `make runall` or your favorite Procfile thing
 
 Development Quick-Start
+-----------------------
 
 **Required Python version: 3.4 or 3.5**
 
@@ -26,7 +27,7 @@ Development Quick-Start
    - csh, tcsh: `source venv/bin/activate.csh`
 3. Install dependencies if necessary: `pip install -r requirements.txt`
    (or use `requirements-fresh.txt` for up-to-date instead of frozen dependencies)
-4. configure: `cp config.py{.example,}; $EDITOR config.py`
+4. configure: `cp config/local.py{.example,}; $EDITOR config/local.py`
 5. create DB tables: `./deadcli newdb --yes`
    optionally add `--extra sql/99-testdata.sql` or whatever you like
 6. run components with `./run*.py` or your favorite Procfile thing
@@ -36,10 +37,7 @@ Next to do:
 
 - fix DB: use psycopg directly, maybe with a simple named args wrapper if it can be made simple
   + then commit explicitly (on cursor.close / contextmanager)
-- complete the switch to numerical controller IDs; derive MAC from ID by default
-  + known unfinished bits: protocol, get_key, cli
 - HTTP API
-- tests
 - CI
 
 Style Guide & such

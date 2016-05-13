@@ -1,6 +1,6 @@
 import enum
 
-from . import tags as T
+from common import tags as T
 
 @enum.unique
 class MsgType(enum.IntEnum):
@@ -15,4 +15,3 @@ class ResponseStatus(enum.IntEnum):
     OK        = T.RESPONSE_OK
     ERR       = T.RESPONSE_ERR
     TRY_AGAIN = T.RESPONSE_TRY_AGAIN
-

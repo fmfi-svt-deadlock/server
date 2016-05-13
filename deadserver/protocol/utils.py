@@ -2,8 +2,7 @@ import base64
 import binascii
 import logging
 
-from constants.enums import MsgType, ResponseStatus
-
+from .constants import MsgType, ResponseStatus
 from . import crypto, errors
 
 def check(expression, errmsg):
@@ -32,6 +31,10 @@ class MessageLogger:
             nonce=show_nonce(envelope.NONCE),
             status=status.name))
 
+    def status_error(self, controller, msg_type, e):
+        self.log.warn('{type} ->{ctrl} {kind} ERROR: {msg}'.format(
+            ctrl=controller, type=msg_type.name, msg=e.message, kind=('SOFT' if e.soft else'HARD')))
+
     def bad_message(self, buf, e, maxlen):
         self.log.exception('BAD MSG: {arg} -- buf: [size {size}] {buf}'.format(
             arg=' '.join(e.args), size=len(buf),
@@ -42,7 +45,7 @@ class MessageLogger:
         return getattr(self.log, attr)
 
 
-# A Box Factory Factory! Today is a good day!
+# A Box Factory Factory! Today is a good day! Err...
 def crypto_box_factory(db):
     def get_box(controller):
         r = db.query('SELECT key FROM controller WHERE id = :id', id=controller).all()

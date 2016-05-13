@@ -14,7 +14,7 @@ import records
 
 import config
 from common import cfiles
-from common import filetypes
+from common.cfiles import filetypes
 from common.utils.db import listen_for_notify
 from deadserver import protocol
 

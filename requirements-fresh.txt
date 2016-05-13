@@ -1,6 +1,7 @@
 cbor
 click
 CherryPy
+parse
 psycopg2
 pynacl
 pytest

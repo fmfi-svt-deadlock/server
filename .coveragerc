@@ -1,8 +1,10 @@
 [report]
 
 source =
-    structparse
-#   deadserver
+    deadserver
+    deadapi
+    deadaux
+    common
 
 exclude_lines =
     pragma: no cover

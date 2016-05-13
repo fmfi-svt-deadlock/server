@@ -17,15 +17,15 @@ import sqlalchemy.exc
 import config
 
 from common.utils import conversions
-from common.utils import record
-from common import deadlock_tags as T
+from common.types import Record
 
 class myconfig:
     initdb_files = [os.path.join(os.path.dirname(__file__), f) for f in [
                     'sql/00-schema.sql',
                     'sql/01-materialize-rules.sql',
-                    'sql/02-triggers.sql',
-                    'sql/03-api-triggers.sql']]
+                    'sql/02-deadaux-triggers.sql',
+                    'sql/03-api-triggers.sql',
+                    ]]
 
 def opendb():
     db = records.Database(config.db_url)
@@ -53,20 +53,25 @@ def list_all():
     """List all controllers in the DB."""
     with opendb() as db:
         rows = db.query('''
-            SELECT mac, ip, p.name AS ap, last_seen, db_version, fw_version
+            SELECT c.id, p.name AS ap, last_seen, db_version, fw_version
             FROM controller c LEFT OUTER JOIN accesspoint p ON p.controller = c.id
-            ORDER BY mac
+            ORDER BY p.name
             ''')
         click.echo(rows.dataset)
 
-@controller.command()
-@click.argument('mac')
-def add(mac):
+@controller.command('new')
+@click.option('--write-config', default=None, type=click.File('wb'),
+              help='Write controller config to file afterwards')
+def new_controller(write_config):
     """Add a controller to the DB, generating a key."""
     key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
     with opendb() as db:
         try:
-            db.query('INSERT INTO controller (mac, key) VALUES (:mac, :key)', mac=mac, key=key)
+            db.query('INSERT INTO controller (key) VALUES (:key)', key=key)
+            new = db.query('SELECT id FROM controller WHERE key = :key', key=key)[0]['id']
+            click.echo('Controller with id {} added.'.format(new))
+            if write_config:
+                writeconfig(new, write_config)
         except sqlalchemy.exc.IntegrityError as e:
             die(e.args[0])
 
@@ -79,17 +84,16 @@ def writeconfig(id, file):
 
     This file must end up on the controller's SD card."""
     with opendb() as db:
-        rows = db.query('SELECT mac, key FROM controller c WHERE id = :id', id=id).all()
+        rows = db.query('SELECT key FROM controller c WHERE id = :id', id=id).all()
         if len(rows) != 1: die('Unknown controller ID')
         r = rows[0]
         if r.mac and r.key:
-            conf = {T.CONFIG_ID: id, T.CONFIG_MAC: r.mac, T.CONFIG_KEY: '[not shown]'}
+            conf = {T.CONFIG_ID: id, T.CONFIG_KEY: '[not shown]'}
             click.echo(record.show(conf), nl=False)
-            conf[T.CONFIG_MAC] = conversions.mac2bytes(r.mac)
             conf[T.CONFIG_KEY] = record.coerce_item(r.key)
             file.write(record.dump(conf))
         else:
-            die('Required config params mac and key not in DB, giving up.')
+            die('Required config params not in DB, giving up.')
 
 @controller.command()
 @click.argument('file', type=click.File('rb'))
@@ -158,8 +162,10 @@ def attach(ip, mac):
 @cli.command()
 @click.option('--extra', multiple=True, type=click.Path(exists=True),
               help='apply this .sql file after initializing DB')
+@click.option('--with-test-id/--without-test-id', default=True,
+              help='add a controller and an accesspoint for testing purposes')
 @click.confirmation_option(prompt='Really delete everything and make the DB like new?')
-def newdb(extra):
+def newdb(extra, with_test_id):
     """Clear the DB to prepare for a new deployment.
 
     (Note for developers: use `make newdb_really_destroy_everything` for better error reporting.)
@@ -170,6 +176,13 @@ def newdb(extra):
         for f in myconfig.initdb_files + list(extra):
             db.query_file(f)
             click.echo('applying file: {}'.format(f))
+        if with_test_id:
+            key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
+            db.query('INSERT INTO controller (id, key) VALUES (:id, :key)',
+                     id=config.test_id, key=key)
+            db.query("INSERT INTO accesspoint (id, name, controller) VALUES (:id, 'test', :id)",
+                     id=config.test_id)
+
 
 ####################################################################################################
 

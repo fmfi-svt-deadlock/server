@@ -1,12 +1,13 @@
 -- note: don't use the same key in production ;-)
-INSERT INTO controller (id, mac, key) VALUES (1, 'aa:00:00:00:00:01', '\x07fc9b73448cb53f45233e6db92ab6a6c7f3f8a998acf103fbab1c947c5f2a68');
-INSERT INTO controller (id, mac, key) VALUES (2, 'aa:00:00:00:00:02', '\x07fc9b73448cb53f45233e6db92ab6a6c7f3f8a998acf103fbab1c947c5f2a68');
-INSERT INTO controller (id, mac, key) VALUES (3, 'aa:00:00:00:00:03', '\x07fc9b73448cb53f45233e6db92ab6a6c7f3f8a998acf103fbab1c947c5f2a68');
-INSERT INTO controller (id, mac, key) VALUES (4, 'aa:00:00:00:00:04', '\x07fc9b73448cb53f45233e6db92ab6a6c7f3f8a998acf103fbab1c947c5f2a68');
-INSERT INTO controller (id, mac, key) VALUES (5, 'aa:00:00:00:00:05', '\x07fc9b73448cb53f45233e6db92ab6a6c7f3f8a998acf103fbab1c947c5f2a68');
-INSERT INTO controller (id, mac, key) VALUES (6, 'aa:00:00:00:00:06', '\x07fc9b73448cb53f45233e6db92ab6a6c7f3f8a998acf103fbab1c947c5f2a68');
-INSERT INTO controller (id, mac, key) VALUES (7, 'aa:00:00:00:00:07', '\x07fc9b73448cb53f45233e6db92ab6a6c7f3f8a998acf103fbab1c947c5f2a68');
-INSERT INTO controller (id, mac, key) VALUES (8, 'aa:00:00:00:00:08', '\x07fc9b73448cb53f45233e6db92ab6a6c7f3f8a998acf103fbab1c947c5f2a68');
+INSERT INTO controller (id, key) VALUES (1, '\x07fc9b73448cb53f45233e6db92ab6a6c7f3f8a998acf103fbab1c947c5f2a68');
+INSERT INTO controller (id, key) VALUES (2, '\x07fc9b73448cb53f45233e6db92ab6a6c7f3f8a998acf103fbab1c947c5f2a68');
+INSERT INTO controller (id, key) VALUES (3, '\x07fc9b73448cb53f45233e6db92ab6a6c7f3f8a998acf103fbab1c947c5f2a68');
+INSERT INTO controller (id, key) VALUES (4, '\x07fc9b73448cb53f45233e6db92ab6a6c7f3f8a998acf103fbab1c947c5f2a68');
+INSERT INTO controller (id, key) VALUES (5, '\x07fc9b73448cb53f45233e6db92ab6a6c7f3f8a998acf103fbab1c947c5f2a68');
+INSERT INTO controller (id, key) VALUES (6, '\x07fc9b73448cb53f45233e6db92ab6a6c7f3f8a998acf103fbab1c947c5f2a68');
+INSERT INTO controller (id, key) VALUES (7, '\x07fc9b73448cb53f45233e6db92ab6a6c7f3f8a998acf103fbab1c947c5f2a68');
+INSERT INTO controller (id, key) VALUES (8, '\x07fc9b73448cb53f45233e6db92ab6a6c7f3f8a998acf103fbab1c947c5f2a68');
+INSERT INTO controller (id, key) VALUES (47,'\x07fc9b73448cb53f45233e6db92ab6a6c7f3f8a998acf103fbab1c947c5f2a68');
 ALTER SEQUENCE controller_id_seq RESTART WITH 256;
 
 INSERT INTO aptype (id, name) VALUES (1, 't1');
@@ -18,6 +19,7 @@ INSERT INTO accesspoint (id, name, type, controller) VALUES (2, 'door2', 1, 2);
 INSERT INTO accesspoint (id, name, type, controller) VALUES (3, 'door3', 2, 3);
 INSERT INTO accesspoint (id, name, type)             VALUES (4, 'noctrl', 2);
 INSERT INTO accesspoint (id, name)                   VALUES (5, 'notype');
+INSERT INTO accesspoint (id, name, type, controller) VALUES (47,'testing', 2, 47);
 ALTER SEQUENCE accesspoint_id_seq RESTART WITH 256;
 
 -- Encode the following:

@@ -1,4 +1,5 @@
 *.py[co]
 venv/
-config.py
+config/local.py
+.cache
 .coverage

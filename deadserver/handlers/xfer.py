@@ -1,33 +1,20 @@
 """Handler for XFER requests: transfer a file chunk"""
 
-from .defs import handles
-from . import utils
+from .defs import handles, MsgType
 
-from common import cfiles
-from common import filetypes
+from common.cfiles import filetypes, fs
+from common.types import Record
 
-from structparse import struct, types
-from ..protocol import MsgType, ResponseStatus
-
-Request = struct('Request',
-                 (filetypes.FileType, 'type'   ),
-                 (types.Uint32,       'version'),
-                 (types.Uint32,       'offset' ),
-                 (types.Uint32,       'length' ))
-
-Response = struct('Response',
-                  (types.Uint32, 'length'),
-                  (types.Tail,   'chunk' ))
+from ..protocol import errors
 
 @handles(MsgType.XFER)
-@utils.deserialize_in
-@utils.serialize_out
-def handle(controller_id, req, api):
-    filename = filetypes.filename(type=req.type, version=req.version.val)
+def handle(controller, req, ctx):
+    ftype = filetypes.FileType(req.FILETYPE)
+    filename = filetypes.filename(ftype, req.FILEVERSION)
     try:
-        with api.cfiles.find_for(controller_id, filename) as f:
-            f.seek(req.offset.val)
-            chunk = f.read(req.length.val)
-            return ResponseStatus.OK, Response(len(chunk), chunk)
-    except ValueError as e:  # file not found
-        return ResponseStatus.TRY_AGAIN, None
+        with ctx.cfiles.open_with_common(filename, controller) as f:
+            f.seek(req.OFFSET)
+            chunk = f.read(req.LENGTH)
+            return Record(LENGTH=len(chunk), CHUNK=chunk)
+    except fs.NoSuchFile as e:
+        raise errors.TransientError('File not found ({} v{})'.format(ftype.name, req.FILEVERSION))

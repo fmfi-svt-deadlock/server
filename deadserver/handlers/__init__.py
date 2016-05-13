@@ -28,10 +28,10 @@ to do this differently, add your handlers below.
 ### LIST OF ALL STANDARD HANDLER IMPORTS ###########################################################
 
 from . import alog
-#from . import ask
+from . import ask
 from . import echotest
-#from . import ping
-#from . import xfer
+from . import ping
+from . import xfer
 
 ####################################################################################################
 

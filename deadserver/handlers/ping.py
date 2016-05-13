@@ -1,34 +1,30 @@
 """Handler for PING requests: keepalive, DB and FW version info"""
 
-import time
-from datetime import datetime
+from datetime import datetime, timezone
+import logging
 
-from structparse import struct, types
-from common import filetypes
+from common.cfiles import filetypes, fs
+from common.types import Record
 
-from .. import protocol
-from ..protocol import MsgType, ResponseStatus
-from .defs import handles
-from . import utils
+from .defs import handles, MsgType
 
-Ping = struct('Ping',
-              (types.Int64,  'time'      ),
-              (types.Uint32, 'db_version'),
-              (types.Uint32, 'fw_version'))
+log = logging.getLogger(__name__)
+
+def get_latest_or_0(cf, ftype, controller):
+    try:
+        return filetypes.get_latest(cf, ftype, controller)
+    except fs.NoSuchFile as e:
+        log.warn('no latest version of {} for #{}'.format(ftype.name, controller))
+        return 0
+
 
 @handles(MsgType.PING)
-@utils.deserialize_in
-@utils.serialize_out
-def handle(controller_id, req, api):
-    api.db.query("UPDATE controller SET last_seen = :t, db_version = :db, fw_version = :fw WHERE mac = :id",
-                 id=protocol.show_id(controller_id), t=datetime.now(),
-                 db=req.db_version.val, fw=req.fw_version.val)
-
-    available_files = [ filetypes.filemeta(f) for f in api.cfiles.ls_for(controller_id) ]
-    db_versions = [ v for t, v in available_files if t == filetypes.FileType.DB ]
-    fw_versions = [ v for t, v in available_files if t == filetypes.FileType.FW ]
-
-    return ResponseStatus.OK, Ping(time=int(time.time()),
-                                   db_version=max(db_versions, default=0),
-                                   fw_version=max(fw_versions, default=0))
-
+def handle(controller, req, ctx):
+    ctx.db.query(
+        'UPDATE controller SET last_seen = :t, db_version = :db, fw_version = :fw WHERE id = :ctrl',
+        ctrl=controller, t=datetime.now(timezone.utc), db=req.DB_VERSION, fw=req.FW_VERSION)
+    return Record(
+        TIME=int(datetime.now(timezone.utc).timestamp()),
+        DB_VERSION=get_latest_or_0(ctx.cfiles, filetypes.FileType.DB, controller),
+        FW_VERSION=get_latest_or_0(ctx.cfiles, filetypes.FileType.FW, controller),
+    )

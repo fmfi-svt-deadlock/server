@@ -1,0 +1,28 @@
+"""The local, deployment-specific configuration.
+
+By default, we import stuff from `defaults.py` and this file (`local.py`) in `__init__.py`,
+but you are welcome to do whatever suits you -- just give the server a module called `config`.
+
+See `defaults.py` for the available config options.
+
+"""
+
+### Resources (such as ports, DB, filesystem) ######################################################
+
+# deadserver binds to this address; must be reachable by controllers
+host = '127.0.0.1'  # Use the actual IP address for UDP!
+port = 5042
+
+# HTTP API server binds to this address
+http_host = '0.0.0.0'
+http_port = 5047
+
+db_url = 'postgresql://username:password@localhost/deadlock'
+
+# path to store files meant to be XFER'ed to controllers
+# (must be writable by deadserver, but need not be persistent)
+controller_files_path = '/tmp/deadserver-controller-files'
+
+### Logging config #################################################################################
+
+# logging_config = yaml.load(open('config/logging-prod.yml'))

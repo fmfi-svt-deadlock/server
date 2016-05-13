@@ -7,7 +7,6 @@
 CREATE TABLE controller (
     id  serial  PRIMARY KEY,
     key bytea   NOT NULL,
-    mac macaddr UNIQUE NOT NULL,
 
     last_seen  timestamptz,
     db_version integer,

@@ -3,7 +3,7 @@
 Reads messages and passes them to the appropriate handlers defined in `handlers/*.py`.
 """
 
-from constants.enums import MsgType, ResponseStatus
+from .protocol.constants import MsgType, ResponseStatus
 from common import cfiles
 
 from . import handlers
@@ -44,5 +44,7 @@ class MessageHandler:
             outdata = handler(controller, indata, ctx=self.ctx)
             status = ResponseStatus.OK
         except errors.StatusError as e:
+            self.log.status_error(controller, msg_type, e)
             status = ResponseStatus.TRY_AGAIN if e.soft else ResponseStatus.ERR
+            outdata = None
         return status, outdata

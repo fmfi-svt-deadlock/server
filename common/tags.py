@@ -10,6 +10,15 @@ TYPE_IPADDR  = 0xDE02
 
 ### data fields ####################################################################################
 
+# envelope
+
+CONTROLLER = 0xDEAA
+NONCE      = 0xDEAB
+PAYLOAD    = 0xDEAC
+VERSION    = 0xDEAD
+
+# request / response
+
 MSG_PING     = 0xDE21
 MSG_XFER     = 0xDE22
 MSG_ALOG     = 0xDE23
@@ -20,15 +29,22 @@ RESPONSE_OK        = 0xDE42  # the answer...
 RESPONSE_ERR       = 0xDE45
 RESPONSE_TRY_AGAIN = 0xDE47
 
-TIME     = 0xDE51
-FILETYPE = 0xDE61
-CARD_ID  = 0xDE91
-ALLOWED  = 0xDE92
+FILETYPE    = 0xDE61
+FILEVERSION = 0xDE62
+DB_VERSION  = 0xDE63
+FW_VERSION  = 0xDE64
+TIME        = 0xDE65
+CARD_ID     = 0xDE66
+ALLOWED     = 0xDE67
+LENGTH      = 0xDE68
+EOF         = 0xDE69
+CHUNK       = 0xDE6A
+OFFSET      = 0xDE6B
 
-CONTROLLER = 0xDEAA
-NONCE      = 0xDEAB
-PAYLOAD    = 0xDEAC
-VERSION    = 0xDEAD
+# inside
+
+FILETYPE_DB = 0xDE91
+FILETYPE_FW = 0xDE92
 
 ### controller configuration #######################################################################
 

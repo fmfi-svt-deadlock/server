@@ -23,4 +23,5 @@ def serve(config):
             if out_packet: socket.sendto(out_packet, self.client_address)
 
     server = socketserver.ThreadingUDPServer((config.host, config.port), MessageHandler)
+    server.max_packet_size = 65536
     server.serve_forever()
