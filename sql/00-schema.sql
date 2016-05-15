@@ -5,12 +5,13 @@
 ----- CONTROLLERS, ACCESSPOINTS, IDENTITIES --------------------------------------------------------
 
 CREATE TABLE controller (
-    id  serial  PRIMARY KEY,
-    key bytea   NOT NULL,
+    id              serial PRIMARY KEY,
+    key             bytea  NOT NULL,
 
-    last_seen  timestamptz,
-    db_version integer,
-    fw_version integer
+    last_seen       timestamptz,
+    controller_time timestamptz,
+    db_version      integer,
+    fw_version      integer
 );
 
 CREATE TABLE aptype (
