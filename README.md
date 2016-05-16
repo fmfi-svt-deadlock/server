@@ -37,6 +37,7 @@ Next to do:
   + then commit explicitly (on cursor.close / contextmanager)
 - HTTP API
 - CI
+- rename "accesspoint" to "poa" everywhere :D
 
 Style Guide & such
 ------------------

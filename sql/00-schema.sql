@@ -72,7 +72,7 @@ CREATE TABLE time_spec (
                                   (date_from IS NULL     AND date_to IS NULL))
 );
 
-CREATE TYPE rule_kind AS ENUM ('ALLOW', 'DENY');
+CREATE TYPE rule_result AS ENUM ('ALLOW', 'DENY');
 
 CREATE TABLE ruleset (
     id    serial      PRIMARY KEY,
@@ -81,13 +81,13 @@ CREATE TABLE ruleset (
 );
 
 CREATE TABLE rule (
-    id        serial    PRIMARY KEY,
-    ruleset   integer   NOT NULL REFERENCES ruleset,
-    priority  integer   NOT NULL, -- higher wins
-    aptype    integer   NOT NULL REFERENCES aptype,
-    time_spec integer   REFERENCES time_spec, -- if NULL, means UnknownTime
-    expr      integer   NOT NULL REFERENCES identity_expr,
-    rkind     rule_kind NOT NULL,
+    id        serial      PRIMARY KEY,
+    ruleset   integer     NOT NULL REFERENCES ruleset,
+    priority  integer     NOT NULL, -- higher wins
+    aptype    integer     NOT NULL REFERENCES aptype,
+    time_spec integer     REFERENCES time_spec, -- if NULL, means UnknownTime
+    expr      integer     NOT NULL REFERENCES identity_expr,
+    result    rule_result NOT NULL,
 
     UNIQUE    (aptype, priority)
 );

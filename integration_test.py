@@ -36,7 +36,8 @@ def test_echotest(request):
     assert re_data == 'kalerab'
 
 def test_ping(request):
-    status, re_data = request(MsgType.PING, Record(DB_VERSION=42, FW_VERSION=47, TIME=4742))
+    now = int(datetime.now(timezone.utc).timestamp())
+    status, re_data = request(MsgType.PING, Record(DB_VERSION=42, FW_VERSION=47, TIME=now))
     assert status == ResponseStatus.OK
     deltat = datetime.now(timezone.utc) - datetime.fromtimestamp(re_data.TIME, timezone.utc)
     assert deltat.total_seconds() < TIMEOUT

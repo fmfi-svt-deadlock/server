@@ -1,4 +1,4 @@
--- Automatically pre-evaluates and materializes access rules.
+-- Automatically pre-evaluates and materializes identity expressions from access rules.
 -- The current implementations of offlinedb and OPEN packet handler depend on this.
 
 -- TODO currently I just recalculate everything on change, but incremental updating would be easy to

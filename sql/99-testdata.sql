@@ -74,10 +74,10 @@ ALTER SEQUENCE time_spec_id_seq RESTART WITH 256;
 INSERT INTO ruleset (id, name) VALUES (1, 'ruleset1');
 ALTER SEQUENCE ruleset_id_seq RESTART WITH 256;
 
-INSERT INTO rule (ruleset, priority, aptype, time_spec, expr, rkind) VALUES (1, 10, 1, 0, 3, 'ALLOW');
-INSERT INTO rule (ruleset, priority, aptype, time_spec, expr, rkind) VALUES (1, 30, 1, 1, 4, 'ALLOW');
-INSERT INTO rule (ruleset, priority, aptype, time_spec, expr, rkind) VALUES (1, 10, 2, 2, 0, 'ALLOW');
-INSERT INTO rule (ruleset, priority, aptype, time_spec, expr, rkind) VALUES (1, 47, 1, 3, 3, 'ALLOW');
+INSERT INTO rule (ruleset, priority, aptype, time_spec, expr, result) VALUES (1, 10, 1, 0, 3, 'ALLOW');
+INSERT INTO rule (ruleset, priority, aptype, time_spec, expr, result) VALUES (1, 30, 1, 1, 4, 'ALLOW');
+INSERT INTO rule (ruleset, priority, aptype, time_spec, expr, result) VALUES (1, 10, 2, 2, 0, 'ALLOW');
+INSERT INTO rule (ruleset, priority, aptype, time_spec, expr, result) VALUES (1, 47, 1, 3, 3, 'ALLOW');
 
 
 INSERT INTO accesslog (time, controller, card, allowed) VALUES (current_timestamp, 1, 'hello', true);
