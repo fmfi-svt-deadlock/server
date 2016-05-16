@@ -8,6 +8,7 @@ import binascii
 import os
 import sys
 
+import cbor
 import click
 import nacl.secret
 import nacl.utils
@@ -17,7 +18,9 @@ import sqlalchemy.exc
 import config
 
 from common.utils import conversions
-from common.types import Record
+from common import types
+from common import types
+from common.types.serializable import cbor_friendly, cbor_encode, cbor_decode
 
 class myconfig:
     initdb_files = [os.path.join(os.path.dirname(__file__), f) for f in [
@@ -87,23 +90,19 @@ def writeconfig(id, file):
         rows = db.query('SELECT key FROM controller c WHERE id = :id', id=id).all()
         if len(rows) != 1: die('Unknown controller ID')
         r = rows[0]
-        if r.mac and r.key:
-            conf = {T.CONFIG_ID: id, T.CONFIG_KEY: '[not shown]'}
-            click.echo(record.show(conf), nl=False)
-            conf[T.CONFIG_KEY] = record.coerce_item(r.key)
-            file.write(record.dump(conf))
-        else:
-            die('Required config params not in DB, giving up.')
+        conf = types.Record(CONFIG_ID=id, CONFIG_KEY='[not shown]')
+        click.echo(types.utils.prettyprint(conf), nl=False)
+        conf.CONFIG_KEY = cbor_friendly(r.key)
+        file.write(cbor.dumps(cbor_encode(conf)))
 
 @controller.command()
 @click.argument('file', type=click.File('rb'))
 def readconfig(file):
     """Print controller configuration in file."""
-    conf = record.load(file.read())
-    for hidden in (T.CONFIG_KEY, T.CONFIG_PRIVKEY):
+    conf = cbor_decode(cbor.loads(file.read()))
+    for hidden in ('CONFIG_KEY', 'CONFIG_PRIVKEY'):
         if hidden in conf: conf[hidden] = '[not shown]'
-    if conf[T.CONFIG_MAC]: conf[T.CONFIG_MAC] = conversions.bytes2mac(conf[T.CONFIG_MAC])
-    click.echo(record.show(conf), nl=False)
+    click.echo(types.utils.prettyprint(conf), nl=False)
 
 ### ACCESSPOINT COMMANDS ###########################################################################
 
@@ -117,18 +116,17 @@ def list_all():
     """List all accesspoints in the DB."""
     with opendb() as db:
         rows = db.query('''
-            SELECT ip, p.name, t.name AS type, c.mac AS controller
-            FROM accesspoint p LEFT OUTER JOIN aptype t ON p.type = t.id
-                 LEFT OUTER JOIN controller c ON p.controller_id = c.id
-            ORDER BY p.name
-            ''')
+            SELECT p.id, p.name, t.name AS type, controller, last_seen
+            FROM accesspoint p
+                 LEFT OUTER JOIN aptype t ON p.type = t.id
+                 LEFT OUTER JOIN controller c ON p.controller = c.id
+            ORDER BY type''')
         click.echo(rows.dataset)
 
 @accesspoint.command()
-@click.argument('ip')
 @click.argument('name')
 @click.argument('type')
-def add(ip, name, type):
+def add(name, type):
     """Add an accesspoint to the DB."""
     with opendb() as db:
         try:
@@ -137,23 +135,27 @@ def add(ip, name, type):
                 WHERE (NOT EXISTS (SELECT name FROM aptype WHERE name = :type))
                 ''', type=type)
             db.query('''
-                INSERT INTO accesspoint (ip, name, type)
-                VALUES (:ip, :name, (SELECT id FROM aptype WHERE name = :type))
-                ''', ip=ip, name=name, type=type)
+                INSERT INTO accesspoint (name, type)
+                VALUES (:name, (SELECT id FROM aptype WHERE name = :type))
+                ''', name=name, type=type)
         except sqlalchemy.exc.IntegrityError as e:
             die(e.args[0])
 
 @accesspoint.command()
-@click.argument('ip')
-@click.argument('mac')
-def attach(ip, mac):
+@click.argument('accesspoint')
+@click.argument('controller')
+def attach(accesspoint, controller):
     """Mark an accesspoint as controlled by the given controller."""
     with opendb() as db:
+        try:  # accept name or ID
+            ap_id = int(accesspoint)
+        except ValueError:
+            r = db.query('SELECT id FROM accesspoint WHERE name = :ap', ap=accesspoint).all()
+            if not r: die('No such accesspoint: {}'.format(accesspoint))
+            ap_id = r[0]['id']
         try:
-            db.query('''
-                UPDATE accesspoint
-                SET controller_id = (SELECT id FROM controller WHERE mac = :mac) WHERE ip = :ip
-                ''', mac=mac, ip=ip)
+            db.query('UPDATE accesspoint SET controller = :ctrl WHERE id = :ap',
+                     ap=ap_id, ctrl=controller)
         except sqlalchemy.exc.IntegrityError as e:
             die(e.args[0])
 

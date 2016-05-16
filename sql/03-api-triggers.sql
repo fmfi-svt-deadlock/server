@@ -15,3 +15,5 @@ CREATE TRIGGER status_change AFTER INSERT OR UPDATE OR DELETE OR TRUNCATE ON acc
                EXECUTE PROCEDURE notify_trigger('status_change');
 CREATE TRIGGER status_change AFTER INSERT OR UPDATE OR DELETE OR TRUNCATE ON controller
                EXECUTE PROCEDURE notify_trigger('status_change');
+CREATE TRIGGER status_change AFTER INSERT OR UPDATE OR DELETE OR TRUNCATE ON accesspoint
+               EXECUTE PROCEDURE notify_trigger('status_change');

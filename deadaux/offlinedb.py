@@ -25,12 +25,14 @@ WAIT_BEFORE_REBUILD = 5  # seconds; wait for the DB to settle, to avoid useless 
 NOTIFY_CHANNELS = ['identity_expr_change', 'rule_change', 'controller_change']
 
 log = logging.getLogger(__name__)
-db  = records.Database(config.db_url); db.db.execution_options(isolation_level='AUTOCOMMIT')
+db  = records.Database(config.db_url)
 cf  = cfiles.ControllerFiles(config.controller_files_path)
 
 def worker(q):
     while True:
-        ...
+        # TODO Adam should figure out what he wants to do here
+        x = q.get()
+        log.debug('would rebuild because of {}'.format(x))
 
 def start(config):
     q = queue.Queue()
@@ -40,19 +42,6 @@ def start(config):
 
     def rebuild(notify):
         # TODO
-        log.debug('would rebuild because of {}'.format(notify))
+        q.put(notify)
 
     listen_for_notify(db, NOTIFY_CHANNELS, rebuild, WAIT_BEFORE_REBUILD)
-
-# def create_db_for(mac):
-#     version = int(time.time())  # fits into uint64
-#     log.info("DB for {}, v{}: starting...".format(mac, version))
-#     filename = filetypes.filename(ftype=filetypes.FileType.DB, version=version)
-#     with cf.open(filename, protocol.str2id(mac), 'wb') as f:
-#         f.write(bytes(str(time.time()), 'utf8'))
-#         f.write(b'\n\nmrkva v zime\n')
-#     log.info("DB for {}, v{}: done".format(mac, version))
-
-#        for row in db.query('SELECT mac FROM controller c JOIN door d ON c.id = d.controller_id'): q.put(row.mac)
-#        q.join()
-#        log.info('all done, going to sleep')
