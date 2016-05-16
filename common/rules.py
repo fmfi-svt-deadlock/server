@@ -16,7 +16,7 @@ def ask(db, accesspoint, when, identity):
     """
     r = db.query(
         '''
-        SELECT (rkind = 'ALLOW')
+        SELECT (result = 'ALLOW')
         FROM rule r
              JOIN accesspoint p ON p.type = r.aptype
              JOIN time_spec t ON r.time_spec = t.id

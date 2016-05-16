@@ -13,6 +13,16 @@ Deployment TL;DR
 4. `./deadcli newdb --yes`
 5. run what you want with `./run*.py` or `make runall` or your favorite Procfile thing
 
+Try it out
+----------
+
+- test with './integration_test.py'
+- try out the server with 'python ./controller.py <controller_id> <packet_type_name>', then write your request to `stdin` in YAML syntax  
+  e.g. `echo {CARD_ID: test1} | python ./controller.py 1 ASK`
+- test the HTTP API e.g. with `curl` (try `GET /events` and poke the DB for instance)
+- test the commandline interface: `./cli`
+  - this one is user-friendly!!!
+
 Development Quick-Start
 -----------------------
 
