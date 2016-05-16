@@ -1,3 +1,4 @@
+"""Translates Postgres NOTIFY to HTTP Eventsource."""
 import contextlib
 import logging
 import queue
@@ -13,17 +14,21 @@ log = logging.getLogger(__name__)
 
 # TODO send diff! totally possible! :D
 class Events:
+    """Fans out notifies into all queues gotten from `self.get_queue`.
+
+    Translates event names according to the given channels map.
+    """
     DEBOUNCE_TIMEOUT = 2  # seconds
 
     def __init__(self, db, channels_map):
+        """channels_map: dict of channel_name: event_name"""
         self.db = db
         self.EVENTS = channels_map
         self.event_queues = set()
         self.event_queues_guard = threading.Lock()
         threading.Thread(target=self.listen, daemon=True).start()
 
-    # TODO awful memory leak! for some reason cherrypy doesn't call close and therefore nobody
-    # cleans up event_queues!!!
+    # TODO for some reason cherrypy doesn't call close and therefore nobody cleans up event_queues!
     # for now workaround: small queue size, delete on full in forward_notify
     @contextlib.contextmanager
     def get_queue(self):
@@ -47,15 +52,17 @@ class Events:
         listen_for_notify(self.db, self.EVENTS, self.forward_notify)
 
 class EventSource:
+    """Translates Postgres NOTIFY to HTTP Eventsource."""
     exposed = True
     _cp_config = {'response.stream': True}
 
     def __init__(self, db, channels_map):
+        """channels_map: dict of channel_name: event_name"""
         self.events = Events(db, channels_map)
 
     @header('Content-Type',      'text/event-stream')
     @header('Cache-Control',     'no-cache')
-    @header('X-Accel-Buffering', 'no')  # tell proxies to not buffer this
+    @header('X-Accel-Buffering', 'no')  # tell proxies not to buffer this
     def GET(self):
         def stream():
             yield '\n'  # push headers
