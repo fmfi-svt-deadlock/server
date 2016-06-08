@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import sys
+import os
+
 from recommonmark.parser import CommonMarkParser
 import sphinx_rtd_theme
 
@@ -8,9 +11,13 @@ import sphinx_rtd_theme
 
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.napoleon',
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
 ]
+
+# autodoc needs to be able to find deadlock stuff
+sys.path.insert(0, os.path.abspath(os.path.pardir))
 
 templates_path = ['_templates']
 

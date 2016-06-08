@@ -57,6 +57,15 @@ Auxiliary jobs supporting the other components:
 
    deadaux/index
 
+API documentation
+-----------------
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API documentation
+   :glob:
+
+   apidoc/*
 
 .. Indices and tables
 .. ==================
